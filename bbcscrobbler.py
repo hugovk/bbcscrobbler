@@ -30,6 +30,17 @@ class escape (Exception):
     pass
 
 
+def scrobble(track):
+    network.scrobble(
+        track.track.artist.name,
+        track.track.title,
+        track.timestamp,
+        duration=str(duration(track)))
+    output("Scrobbled: %s" % playing_track.track)
+    playing_track_scrobbled = True
+    return playing_track_scrobbled
+
+
 def output(text):
     print(text)
     # Windows:
@@ -86,13 +97,7 @@ while True:
         if new_track != playing_track:
 
             if playing_track and not playing_track_scrobbled:
-                network.scrobble(
-                    playing_track.track.artist.name,
-                    playing_track.track.title,
-                    playing_track.timestamp,
-                    duration=str(duration(playing_track)))
-                playing_track_scrobbled = True
-                output("Scrobbled: %s" % playing_track.track)
+                playing_track_scrobbled = scrobble(playing_track)
 
             network.update_now_playing(
                 new_track.track.artist.name,
@@ -106,13 +111,7 @@ while True:
                 and not playing_track_scrobbled \
                 and (time.time() - int(playing_track.timestamp)) \
                 >= duration(playing_track)/2:
-            network.scrobble(
-                playing_track.track.artist.name,
-                playing_track.track.title,
-                playing_track.timestamp,
-                duration=str(duration(playing_track)))
-            output("Scrobbled: %s" % playing_track.track)
-            playing_track_scrobbled = True
+            playing_track_scrobbled = scrobble(playing_track)
 
     except escape:
         pass
