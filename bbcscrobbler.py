@@ -66,19 +66,78 @@ def check_itunes():
                     output("iTunes:      Not BBC")
                 else:
                     if "BBC Radio 1" in now_playing:
-                        args.station == "bbcradio1"
+                        args.station = "bbcradio1"
                     elif "BBC Radio 1Xtra" in now_playing:
-                        args.station == "bbc1xtra"
+                        args.station = "bbc1xtra"
                     elif "BBC Radio 2" in now_playing:
-                        args.station == "bbcradio2"
+                        args.station = "bbcradio2"
                     elif "BBC Radio 6 Music" in now_playing:
-                        args.station == "bbc6music"
+                        args.station = "bbc6music"
                     else:
                         output("iTunes:      Wrong station")
                         return False
                     return True
 
     return False
+
+
+def check_winamp():
+    """
+    If not Windows, return True.
+    If Windows, return True if Winamp is now playing BBC Radio
+    """
+    if args.ignore_winamp or _platform != "win32":
+        return True
+
+    else:
+        # Is Winamp playing?
+        import win32api
+        import win32gui
+        WM_USER = 0x400
+        handle = win32gui.FindWindow('Winamp v1.x', None)
+        state = win32api.SendMessage(handle, WM_USER, 0, 104)
+
+        if state == 0:
+            output("Winamp:      stopped")
+        elif state == 3:
+            output("Winamp:      paused")
+        elif state != 1:
+            output("Winamp:      unknown state " + state)
+        elif state == 1:  # playing
+
+            # Is iTunes playing BBC Radio?
+            now_playing = win32gui.GetWindowText(handle)
+            if "BBC" not in now_playing:
+                output("iTunes:      Not BBC")
+            else:
+                if "BBC Radio 1" in now_playing:
+                    args.station = "bbcradio1"
+                elif "BBC 1Xtra" in now_playing:
+                    args.station = "bbc1xtra"
+                elif "BBC Radio 2" in now_playing:
+                    args.station = "bbcradio2"
+                elif "BBC 6Music" in now_playing:
+                    args.station = "bbc6music"
+                else:
+                    output("iTunes:      Wrong station")
+                    return False
+                return True
+
+        return False
+
+
+def check_media_player():
+    """
+    If Mac, check iTunes.
+    If Windows, check Winamp.
+    Else return True.
+    """
+    if _platform == "darwin":
+        return check_itunes()
+    elif _platform == "win32":
+        return check_winamp()
+    else:
+        return True
 
 
 def update_now_playing(track):
@@ -127,11 +186,17 @@ if __name__ == '__main__':
         description="BBC Radio scrobbler. "
         "On Mac: scrobbles BBC from iTunes if it's running, "
         "or the station of your choice if --ignore-itunes. "
-        "On Windows, scrobbles your choice.",
+        "On Windows: scrobbles BBC from Winamp if it's running, "
+        "or the station of your choice if --ignore-winamp.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--ignore-itunes',  action='store_true',
         help='Mac only: Ignore whatever iTunes is doing and scrobble the '
+        'station. For example, use this if listening via web or a real '
+        'radio.')
+    parser.add_argument(
+        '--ignore-winamp',  action='store_true',
+        help='Windows only: Ignore whatever Winamp is doing and scrobble the '
         'station. For example, use this if listening via web or a real '
         'radio.')
     parser.add_argument(
@@ -173,7 +238,7 @@ if __name__ == '__main__':
     np_time = None
     while True:
 
-        if not check_itunes():
+        if not check_media_player():
 
             last_station = None
             last_scrobbled = None
@@ -207,8 +272,8 @@ if __name__ == '__main__':
                 else:
                     now = int(time.time())
                     if playing_track \
-                        and now - np_time >= 30 \
                         and not playing_track_scrobbled \
+                        and now - np_time >= 30 \
                         and (time.time() - int(playing_track.timestamp)) \
                             >= duration(playing_track)/2:
                         playing_track_scrobbled = scrobble(playing_track)
