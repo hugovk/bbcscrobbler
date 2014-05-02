@@ -22,7 +22,10 @@ class escape (Exception):
 
 
 def osascript(args):
-    return subprocess.check_output(args).strip()
+    try:
+        return subprocess.check_output(args).strip()
+    except Exception as e:
+        return("Error: %s" % repr(e))
 
 
 def check_itunes():
@@ -105,10 +108,10 @@ def check_winamp():
             output("Winamp:      unknown state " + state)
         elif state == 1:  # playing
 
-            # Is iTunes playing BBC Radio?
+            # Is Winamp playing BBC Radio?
             now_playing = win32gui.GetWindowText(handle)
             if "BBC" not in now_playing:
-                output("iTunes:      Not BBC")
+                output("Winamp:      Not BBC")
             else:
                 if "BBC Radio 1" in now_playing:
                     args.station = "bbcradio1"
@@ -119,7 +122,7 @@ def check_winamp():
                 elif "BBC 6Music" in now_playing:
                     args.station = "bbc6music"
                 else:
-                    output("iTunes:      Wrong station")
+                    output("Winamp:      Wrong station")
                     return False
                 return True
 
@@ -169,7 +172,7 @@ def output(text):
     # Windows:
     if _platform == "win32":
         if "&" in text:
-            text.replace("&", "^&")  # escape ampersand
+            text = text.replace("&", "^&")  # escape ampersand
         os.system("title " + text)
     # Linux, OS X or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
@@ -190,6 +193,10 @@ if __name__ == '__main__':
         "or the station of your choice if --ignore-winamp.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
+        '-i', '--ignore-media-player',  action='store_true',
+        help='Shortcut for --ignore-itunes on Mac '
+        'or --ignore-winamp on Windows')
+    parser.add_argument(
         '--ignore-itunes',  action='store_true',
         help='Mac only: Ignore whatever iTunes is doing and scrobble the '
         'station. For example, use this if listening via web or a real '
@@ -204,6 +211,12 @@ if __name__ == '__main__':
         choices=('bbc6music', 'bbcradio1', 'bbcradio2', 'bbc1xtra'),
         help='BBC station to scrobble')
     args = parser.parse_args()
+
+    if args.ignore_media_player:
+        if _platform == "darwin":
+            args.ignore_itunes = True
+        elif _platform == "win32":
+            args.ignore_winamp = True
 
     network = pylast.LastFMNetwork(API_KEY, API_SECRET)
 
@@ -257,7 +270,7 @@ if __name__ == '__main__':
 
                 if (time.time() - int(new_track.timestamp)) > \
                         ONE_DAY_IN_SECONDS:
-                    print "Last track over a day ago, don't scrobble"
+                    print("Last track over a day ago, don't scrobble")
                     raise escape
 
                 # A new, different track
