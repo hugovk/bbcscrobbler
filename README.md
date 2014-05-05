@@ -12,13 +12,13 @@ Basic use:
 bbcscrobbler.py
 ```
 
-Want to ignoreiTunes/Winamp and scrobble via the web or from a real radio? Default to BBC 6 Music: 
+Want to ignore iTunes/Winamp and scrobble via the web or from a real radio? Defaults to BBC 6 Music: 
 
 ```
 bbcscrobbler.py --ignore-media-player
 ```
 
-Or ignore iTunes/Winamp and scrobble a named station (bbc6music, bbcradio1, bbcradio2 or bbc1xtra):
+Or ignore iTunes/Winamp and scrobble a named station ([bbcradio1](https://www.last.fm/user/bbcradio1), [bbc1xtra](https://www.last.fm/user/bbc1xtra), [bbcradio2](https://www.last.fm/user/bbcradio2) or [bbc6music](https://www.last.fm/user/bbc6music)):
 
 ```
 bbcscrobbler.py bbc1xtra --ignore-media-player
