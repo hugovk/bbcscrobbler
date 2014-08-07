@@ -12,7 +12,7 @@ API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
 
 SESSION_KEY_FILE = os.path.join(os.path.expanduser("~"), ".session_key")
-ONE_DAY_IN_SECONDS = 60*60*24
+ONE_HOUR_IN_SECONDS = 60*60
 
 last_output = None
 
@@ -269,8 +269,8 @@ if __name__ == '__main__':
                 new_track = station.get_recent_tracks(1)[0]
 
                 if (time.time() - int(new_track.timestamp)) > \
-                        ONE_DAY_IN_SECONDS:
-                    print("Last track over a day ago, don't scrobble")
+                        ONE_HOUR_IN_SECONDS:
+                    print("Last track over an hour ago, don't scrobble")
                     raise escape
 
                 # A new, different track
