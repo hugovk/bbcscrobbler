@@ -254,7 +254,6 @@ if __name__ == '__main__':
         if not check_media_player():
 
             last_station = None
-            last_scrobbled = None
             playing_track = None
             playing_track_scrobbled = False
 
@@ -286,10 +285,13 @@ if __name__ == '__main__':
                     now = int(time.time())
                     if playing_track \
                         and not playing_track_scrobbled \
+                        and playing_track != last_scrobbled \
                         and now - np_time >= 30 \
                         and (time.time() - int(playing_track.timestamp)) \
                             >= duration(playing_track)/2:
                         playing_track_scrobbled = scrobble(playing_track)
+                        if playing_track_scrobbled:
+                            last_scrobbled = playing_track
 
             except escape:
                 pass
