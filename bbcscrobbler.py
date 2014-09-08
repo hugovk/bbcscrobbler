@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Author: Amr Hassan <amr.hassan@gmail.com>
+# Authors: Amr Hassan <amr.hassan@gmail.com> and hugovk <https://github.com/hugovk>
 
 import argparse
 import os
@@ -119,7 +119,8 @@ def check_winamp():
                     args.station = "bbc1xtra"
                 elif "BBC Radio 2" in now_playing:
                     args.station = "bbcradio2"
-                elif "BBC 6Music" in now_playing:
+                elif ("BBC 6Music" in now_playing or
+                      "BBC 6 Music" in now_playing):
                     args.station = "bbc6music"
                 else:
                     output("Winamp:      Wrong station")
@@ -265,7 +266,11 @@ if __name__ == '__main__':
                 output("Tuned in to %s\n---------------------" % args.station)
 
             try:
-                new_track = station.get_recent_tracks(1)[0]
+                # Get last scrobbled track, because BBC stations don't usually
+                # use "now playing", but set songs as scrobbled as soon as
+                # they're played.
+                # (But get two because sometimes there is a "now playing".)
+                new_track = station.get_recent_tracks(2)[0]
 
                 if (time.time() - int(new_track.timestamp)) > \
                         ONE_HOUR_IN_SECONDS:
