@@ -243,60 +243,63 @@ if __name__ == '__main__':
     playing_track = None
     playing_track_scrobbled = False
     np_time = None
-    while True:
 
-        if not check_media_player():
+    try:
+        while True:
+            if not check_media_player():
 
-            last_station = None
-            playing_track = None
-            playing_track_scrobbled = False
+                last_station = None
+                playing_track = None
+                playing_track_scrobbled = False
 
-        else:
+            else:
 
-            if last_station != args.station:
-                last_station = args.station
-                station = network.get_user(args.station)
-                output("Tuned in to %s\n---------------------" % args.station)
+                if last_station != args.station:
+                    last_station = args.station
+                    station = network.get_user(args.station)
+                    output("Tuned in to %s\n---------------------" %
+                           args.station)
 
-            try:
-                # Get last scrobbled track, because BBC stations don't usually
-                # use "now playing", but set songs as scrobbled as soon as
-                # they're played.
-                # (But get two because sometimes there is a "now playing".)
-                new_track = station.get_recent_tracks(2)[0]
+                try:
+                    # Get last scrobbled track, because BBC stations don't
+                    # usually use "now playing", but set songs as scrobbled as
+                    # soon as they're played.
+                    # (But get two because sometimes there is a "now playing".)
+                    new_track = station.get_recent_tracks(2)[0]
 
-                if (time.time() - int(new_track.timestamp)) > \
-                        ONE_HOUR_IN_SECONDS:
-                    print("Last track over an hour ago, don't scrobble")
-                    raise escape
+                    if (time.time() - int(new_track.timestamp)) > \
+                            ONE_HOUR_IN_SECONDS:
+                        print("Last track over an hour ago, don't scrobble")
+                        raise Escape
 
-                # A new, different track
-                if new_track != playing_track:
+                    # A new, different track
+                    if new_track != playing_track:
+                        playing_track = new_track
+                        playing_track_scrobbled = False
+                        update_now_playing(playing_track)
+                        np_time = int(time.time())
 
-                    playing_track = new_track
-                    playing_track_scrobbled = False
-                    update_now_playing(playing_track)
-                    np_time = int(time.time())
+                    # Scrobble it if 30 seconds has gone by
+                    else:
+                        now = int(time.time())
+                        if playing_track \
+                            and not playing_track_scrobbled \
+                            and playing_track != last_scrobbled \
+                            and now - np_time >= 30 \
+                            and (time.time() - int(playing_track.timestamp)) \
+                                >= duration(playing_track)/2:
+                            playing_track_scrobbled = scrobble(playing_track)
+                            if playing_track_scrobbled:
+                                last_scrobbled = playing_track
 
-                # Scrobble it if 30 seconds has gone by
-                else:
-                    now = int(time.time())
-                    if playing_track \
-                        and not playing_track_scrobbled \
-                        and playing_track != last_scrobbled \
-                        and now - np_time >= 30 \
-                        and (time.time() - int(playing_track.timestamp)) \
-                            >= duration(playing_track)/2:
-                        playing_track_scrobbled = scrobble(playing_track)
-                        if playing_track_scrobbled:
-                            last_scrobbled = playing_track
+                except Escape:
+                    pass
+                except Exception as e:
+                    print("Error: %s" % repr(e))
 
-            except escape:
-                pass
-            except Exception as e:
-                print("Error: %s" % repr(e))
+            time.sleep(15)
 
-        time.sleep(15)
-
+    except KeyboardInterrupt:
+        print("exit")
 
 # End of file
