@@ -28,6 +28,30 @@ def osascript(args):
         return("Error: %s" % repr(e))
 
 
+def is_playing_bbc(now_playing, player_name):
+    if "bbc" not in now_playing.lower():
+        output(player_name + ":      Not BBC")
+        return False
+    else:
+        if "BBC Radio 1" in now_playing:
+            args.station = "bbcradio1"
+        elif ("BBC 1Xtra" in now_playing or
+              "BBC Radio 1Xtra" in now_playing):
+            args.station = "bbc1xtra"
+        elif "BBC Radio 2" in now_playing:
+            args.station = "bbcradio2"
+        elif ("BBC 6Music" in now_playing or
+              "BBC 6 Music" in now_playing or
+              "bbc 6music" in now_playing or
+              "BBC Radio 6 Music" in now_playing):
+            args.station = "bbc6music"
+        else:
+            output(player_name + ":      Wrong station")
+            return False
+        return True
+    return False
+
+
 def check_itunes():
     """
     If not Mac, return True.
@@ -57,7 +81,6 @@ def check_itunes():
             if state != "playing":
                 output("iTunes:      " + state)
             else:
-
                 # Is iTunes playing BBC Radio?
                 now_playing = osascript([
                     "osascript",
@@ -65,21 +88,7 @@ def check_itunes():
                     "-e", "set thisTitle to name of current track",
                     "-e", "set output to thisTitle",
                     "-e", "end tell"])
-                if "BBC Radio" not in now_playing:
-                    output("iTunes:      Not BBC")
-                else:
-                    if "BBC Radio 1" in now_playing:
-                        args.station = "bbcradio1"
-                    elif "BBC Radio 1Xtra" in now_playing:
-                        args.station = "bbc1xtra"
-                    elif "BBC Radio 2" in now_playing:
-                        args.station = "bbcradio2"
-                    elif "BBC Radio 6 Music" in now_playing:
-                        args.station = "bbc6music"
-                    else:
-                        output("iTunes:      Wrong station")
-                        return False
-                    return True
+                return is_playing_bbc(now_playing, "iTunes")
 
     return False
 
@@ -107,25 +116,9 @@ def check_winamp():
         elif state != 1:
             output("Winamp:      unknown state " + state)
         elif state == 1:  # playing
-
             # Is Winamp playing BBC Radio?
             now_playing = win32gui.GetWindowText(handle)
-            if "BBC" not in now_playing:
-                output("Winamp:      Not BBC")
-            else:
-                if "BBC Radio 1" in now_playing:
-                    args.station = "bbcradio1"
-                elif "BBC 1Xtra" in now_playing:
-                    args.station = "bbc1xtra"
-                elif "BBC Radio 2" in now_playing:
-                    args.station = "bbcradio2"
-                elif ("BBC 6Music" in now_playing or
-                      "BBC 6 Music" in now_playing):
-                    args.station = "bbc6music"
-                else:
-                    output("Winamp:      Wrong station")
-                    return False
-                return True
+            return is_playing_bbc(now_playing, "Winamp")
 
         return False
 
