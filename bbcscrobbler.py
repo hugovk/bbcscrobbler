@@ -15,9 +15,10 @@ SESSION_KEY_FILE = os.path.join(os.path.expanduser("~"), ".session_key")
 ONE_HOUR_IN_SECONDS = 60*60
 
 last_output = None
+WM_USER = 0x400
 
 
-class escape (Exception):
+class Escape(Exception):
     pass
 
 
@@ -42,7 +43,7 @@ def is_playing_bbc(now_playing, player_name):
             args.station = "bbcradio2"
         elif ("BBC 6Music" in now_playing or
               "BBC 6 Music" in now_playing or
-              "bbc 6music" in now_playing or
+              "6music" in now_playing or
               "BBC Radio 6 Music" in now_playing):
             args.station = "bbc6music"
         else:
@@ -105,7 +106,6 @@ def check_winamp():
         # Is Winamp playing?
         import win32api
         import win32gui
-        WM_USER = 0x400
         handle = win32gui.FindWindow('Winamp v1.x', None)
         state = win32api.SendMessage(handle, WM_USER, 0, 104)
 
