@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Authors: Amr Hassan <amr.hassan@gmail.com> and hugovk <https://github.com/hugovk>
+# Authors: Amr Hassan <amr.hassan@gmail.com>
+# and hugovk <https://github.com/hugovk>
 
 import argparse
 import os
@@ -7,6 +8,8 @@ import pylast
 from sys import platform as _platform
 import subprocess
 import time
+
+import bbcrealtime  # https://github.com/hugovk/bbc-tools
 
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
@@ -138,22 +141,24 @@ def check_media_player():
 
 
 def update_now_playing(track):
+    if not track:
+        return
     network.update_now_playing(
-        new_track.track.artist.name,
-        new_track.track.title,
-        duration=str(duration(new_track)))
-    output("Now playing: %s" % new_track.track)
+        track.artist.name,
+        track.title,
+        duration=duration(track))
+    output("Now playing: %s" % track)
 
 
 def scrobble(track):
+    if not track:
+        return
     network.scrobble(
-        track.track.artist.name,
-        track.track.title,
-        track.timestamp,
-        duration=str(duration(track)))
-    output("Scrobbled:   %s" % playing_track.track)
-    playing_track_scrobbled = True
-    return playing_track_scrobbled
+        track.artist.name,
+        track.title,
+        track.start,
+        duration=duration(track))
+    output("Scrobbled:   %s" % track)
 
 
 def output(text):
@@ -175,7 +180,8 @@ def output(text):
 
 
 def duration(track):
-    return int(track.track.get_duration())/1000
+    """Return duration in seconds"""
+    return track.end - track.start
 
 
 if __name__ == '__main__':
@@ -241,8 +247,8 @@ if __name__ == '__main__':
     last_station = None
     last_scrobbled = None
     playing_track = None
-    playing_track_scrobbled = False
     np_time = None
+    scrobble_me_next = None
 
     try:
         while True:
@@ -250,56 +256,62 @@ if __name__ == '__main__':
 
                 last_station = None
                 playing_track = None
-                playing_track_scrobbled = False
 
             else:
 
                 if last_station != args.station:
                     last_station = args.station
-                    station = network.get_user(args.station)
                     output("Tuned in to %s\n---------------------" %
                            args.station)
 
                 try:
-                    # Get last scrobbled track, because BBC stations don't
-                    # usually use "now playing", but set songs as scrobbled as
-                    # soon as they're played.
-                    # (But get two because sometimes there is a "now playing".)
-                    new_track = station.get_recent_tracks(2)[0]
+                    # Get now playing track
+                    realtime = bbcrealtime.nowplaying(args.station)
+                    if realtime:
+                        new_track = pylast.Track(
+                            realtime['artist'], realtime['title'], network)
+                        new_track.start = realtime['start']
+                        new_track.end = realtime['end']
+                    else:
+                        new_track = None
 
-                    if (time.time() - int(new_track.timestamp)) > \
+                    if new_track and \
+                            (time.time() - new_track.end) > \
                             ONE_HOUR_IN_SECONDS:
                         print("Last track over an hour ago, don't scrobble")
                         raise Escape
 
                     # A new, different track
                     if new_track != playing_track:
+
+                        if scrobble_me_next:
+                            scrobble(scrobble_me_next)
+                            scrobble_me_next = None
+                            last_scrobbled = scrobble_me_next
+
                         playing_track = new_track
-                        playing_track_scrobbled = False
                         update_now_playing(playing_track)
                         np_time = int(time.time())
 
-                    # Scrobble it if 30 seconds has gone by
+                    # Scrobblable if 30 seconds has gone by
                     else:
                         now = int(time.time())
                         if playing_track \
-                            and not playing_track_scrobbled \
-                            and playing_track != last_scrobbled \
-                            and now - np_time >= 30 \
-                            and (time.time() - int(playing_track.timestamp)) \
-                                >= duration(playing_track)/2:
-                            playing_track_scrobbled = scrobble(playing_track)
-                            if playing_track_scrobbled:
-                                last_scrobbled = playing_track
+                           and playing_track != last_scrobbled \
+                           and now - np_time >= 30:
+                            scrobble_me_next = playing_track
 
                 except Escape:
                     pass
-                except Exception as e:
+                except (pylast.NetworkError,
+                        pylast.MalformedResponseError) as e:
                     print("Error: %s" % repr(e))
 
             time.sleep(15)
 
     except KeyboardInterrupt:
+        if scrobble_me_next:
+            scrobble(scrobble_me_next)
         print("exit")
 
 # End of file
