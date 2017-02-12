@@ -3,6 +3,7 @@
 # and hugovk <https://github.com/hugovk>
 
 import argparse
+import atexit
 import os
 import pylast
 from sys import platform as _platform
@@ -146,7 +147,8 @@ def update_now_playing(track):
     network.update_now_playing(
         track.artist.name,
         track.title,
-        duration=duration(track))
+        duration=duration(track)
+        )
     output("Now playing: %s" % track)
 
 
@@ -177,6 +179,16 @@ def output(text):
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         import sys
         sys.stdout.write("\x1b]2;" + text + "\x07")
+
+
+def restore_terminal_title():
+    # Windows:
+    if _platform == "win32":
+        pass  # TODO
+    # Linux, OS X or Cygwin:
+    elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
+        import sys
+        sys.stdout.write("\e]2;\a")
 
 
 def duration(track):
@@ -211,6 +223,8 @@ if __name__ == '__main__':
         choices=('bbc6music', 'bbcradio1', 'bbcradio2', 'bbc1xtra'),
         help='BBC station to scrobble')
     args = parser.parse_args()
+
+    atexit.register(restore_terminal_title)
 
     if args.ignore_media_player:
         if _platform == "darwin":
@@ -313,5 +327,6 @@ if __name__ == '__main__':
         if scrobble_me_next:
             scrobble(scrobble_me_next)
         print("exit")
+
 
 # End of file
