@@ -19,7 +19,7 @@ API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
 
 SESSION_KEY_FILE = os.path.join(os.path.expanduser("~"), ".session_key")
-ONE_HOUR_IN_SECONDS = 60*60
+ONE_HOUR_IN_SECONDS = 60 * 60
 
 last_output = None
 WM_USER = 0x400
@@ -113,7 +113,8 @@ def check_winamp():
         # Is Winamp playing?
         import win32api
         import win32gui
-        handle = win32gui.FindWindow('Winamp v1.x', None)
+
+        handle = win32gui.FindWindow("Winamp v1.x", None)
         state = win32api.SendMessage(handle, WM_USER, 0, 104)
 
         if state == 0:
@@ -181,6 +182,7 @@ def output(text):
     # Linux, OS X or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         import sys
+
         sys.stdout.write("\x1b]2;" + text + "\x07")
 
 
@@ -191,6 +193,7 @@ def restore_terminal_title():
     # Linux, OS X or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         import sys
+
         sys.stdout.write("\e]2;\a")
 
 
@@ -199,32 +202,43 @@ def duration(track):
     return track.end - track.start
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="BBC Radio scrobbler. "
         "On Mac: scrobbles BBC from iTunes if it's running, "
         "or the station of your choice if --ignore-itunes. "
         "On Windows: scrobbles BBC from Winamp if it's running, "
         "or the station of your choice if --ignore-winamp.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
-        '-i', '--ignore-media-player',  action='store_true',
-        help='Shortcut for --ignore-itunes on Mac '
-        'or --ignore-winamp on Windows')
+        "-i",
+        "--ignore-media-player",
+        action="store_true",
+        help="Shortcut for --ignore-itunes on Mac or "
+             "--ignore-winamp on Windows",
+    )
     parser.add_argument(
-        '--ignore-itunes',  action='store_true',
-        help='Mac only: Ignore whatever iTunes is doing and scrobble the '
-        'station. For example, use this if listening via web or a real '
-        'radio.')
+        "--ignore-itunes",
+        action="store_true",
+        help="Mac only: Ignore whatever iTunes is doing and scrobble the "
+        "station. For example, use this if listening via web or a real "
+        "radio.",
+    )
     parser.add_argument(
-        '--ignore-winamp',  action='store_true',
-        help='Windows only: Ignore whatever Winamp is doing and scrobble the '
-        'station. For example, use this if listening via web or a real '
-        'radio.')
+        "--ignore-winamp",
+        action="store_true",
+        help="Windows only: Ignore whatever Winamp is doing and scrobble the "
+        "station. For example, use this if listening via web or a real "
+        "radio.",
+    )
     parser.add_argument(
-        'station',  nargs='?', default='bbc6music',
-        choices=('bbc6music', 'bbcradio1', 'bbcradio2', 'bbc1xtra'),
-        help='BBC station to scrobble')
+        "station",
+        nargs="?",
+        default="bbc6music",
+        choices=("bbc6music", "bbcradio1", "bbcradio2", "bbc1xtra"),
+        help="BBC station to scrobble",
+    )
     args = parser.parse_args()
 
     atexit.register(restore_terminal_title)
@@ -245,6 +259,7 @@ if __name__ == '__main__':
             "Please authorize the scrobbler "
             "to scrobble to your account: %s\n" % url)
         import webbrowser
+
         webbrowser.open(url)
 
         while True:
@@ -286,15 +301,17 @@ if __name__ == '__main__':
                     realtime = bbcrealtime.nowplaying(args.station)
                     if realtime:
                         new_track = pylast.Track(
-                            realtime['artist'], realtime['title'], network)
-                        new_track.start = realtime['start']
-                        new_track.end = realtime['end']
+                            realtime["artist"], realtime["title"], network
+                        )
+                        new_track.start = realtime["start"]
+                        new_track.end = realtime["end"]
                     else:
                         new_track = None
 
-                    if new_track and \
-                            (time.time() - new_track.end) > \
-                            ONE_HOUR_IN_SECONDS:
+                    if (
+                        new_track
+                        and (time.time() - new_track.end) > ONE_HOUR_IN_SECONDS
+                    ):
                         print("Last track over an hour ago, don't scrobble")
                         raise Escape
 
@@ -313,9 +330,11 @@ if __name__ == '__main__':
                     # Scrobblable if 30 seconds has gone by
                     else:
                         now = int(time.time())
-                        if playing_track \
-                           and playing_track != last_scrobbled \
-                           and now - np_time >= 30:
+                        if (
+                            playing_track
+                            and playing_track != last_scrobbled
+                            and now - np_time >= 30
+                        ):
                             scrobble_me_next = playing_track
 
                 except Escape:
