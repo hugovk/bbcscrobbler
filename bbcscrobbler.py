@@ -33,7 +33,7 @@ def osascript(args):
     try:
         return subprocess.check_output(args).strip()
     except Exception as e:
-        return("Error: %s" % repr(e))
+        return "Error: {}".format(repr(e))
 
 
 def is_playing_bbc(now_playing, player_name):
@@ -153,7 +153,7 @@ def update_now_playing(track):
         track.title,
         duration=duration(track)
         )
-    output("Now playing: %s" % track)
+    output("Now playing: {}".format(track))
 
 
 def scrobble(track):
@@ -164,7 +164,7 @@ def scrobble(track):
         track.title,
         track.start,
         duration=duration(track))
-    output("Scrobbled:   %s" % track)
+    output("Scrobbled:   {}".format(track))
 
 
 def output(text):
@@ -343,7 +343,7 @@ if __name__ == "__main__":
                     pass
                 except (pylast.NetworkError,
                         pylast.MalformedResponseError) as e:
-                    print("Error: %s" % repr(e))
+                    print("Error: {}".format(repr(e)))
 
             time.sleep(15)
 
