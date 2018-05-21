@@ -192,9 +192,11 @@ def restore_terminal_title():
         pass  # TODO
     # Linux, OS X or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
-        import sys
+        # import sys
 
-        sys.stdout.write("\e]2;\a")
+        # TODO: This isn't working in macOS/iTerm2/Zsh
+        # sys.stdout.write("\e]2;\a")
+        pass  # TODO
 
 
 def duration(track):
