@@ -36,23 +36,31 @@ def osascript(args):
         return "Error: {}".format(repr(e))
 
 
+def normalise_station(station):
+    if "BBC Radio 1" in station:
+        station = "bbcradio1"
+    elif "BBC 1Xtra" in station or "BBC Radio 1Xtra" in station:
+        station = "bbc1xtra"
+    elif "BBC Radio 2" in station:
+        station = "bbcradio2"
+    elif (
+        "BBC 6Music" in station
+        or "BBC 6 Music" in station
+        or "6music" in station
+        or "BBC Radio 6 Music" in station
+    ):
+        station = "bbc6music"
+    return station
+
+
 def is_playing_bbc(now_playing, player_name):
     if "bbc" not in now_playing.lower():
         output(player_name + ":      Not BBC")
         return False
     else:
-        if "BBC Radio 1" in now_playing:
-            args.station = "bbcradio1"
-        elif ("BBC 1Xtra" in now_playing or
-              "BBC Radio 1Xtra" in now_playing):
-            args.station = "bbc1xtra"
-        elif "BBC Radio 2" in now_playing:
-            args.station = "bbcradio2"
-        elif ("BBC 6Music" in now_playing or
-              "BBC 6 Music" in now_playing or
-              "6music" in now_playing or
-              "BBC Radio 6 Music" in now_playing):
-            args.station = "bbc6music"
+        station = normalise_station(now_playing)
+        if "bbc" in station:
+            args.station = station
         else:
             output(player_name + ":      Wrong station")
             return False
