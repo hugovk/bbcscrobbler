@@ -31,7 +31,7 @@ class Escape(Exception):
 
 def osascript(args):
     try:
-        return subprocess.check_output(args).strip()
+        return subprocess.getoutput(args).strip()
     except Exception as e:
         return "Error: {}".format(repr(e))
 
@@ -71,31 +71,35 @@ def check_itunes():
     else:
 
         # Is iTunes running?
-        count = int(osascript([
-            "osascript",
-            "-e", "tell application \"System Events\"",
-            "-e", "count (every process whose name is \"iTunes\")",
-            "-e", "end tell"]))
+        count = int(
+            osascript(
+                "osascript "
+                "-e 'tell application \"System Events\"' "
+                "-e 'count (every process whose name is \"iTunes\")' "
+                "-e 'end tell'"
+            )
+        )
         if count == 0:
             output("iTunes:      not running")
         else:
 
             # Is iTunes playing?
-            state = osascript([
-                "osascript",
-                "-e", "tell application \"iTunes\" to player state as string"
-                ])
+            state = osascript(
+                "osascript "
+                "-e 'tell application \"iTunes\" to player state as string'"
+            )
 
             if state != "playing":
                 output("iTunes:      " + state)
             else:
                 # Is iTunes playing BBC Radio?
-                now_playing = osascript([
-                    "osascript",
-                    "-e", "tell application \"iTunes\"",
-                    "-e", "set thisTitle to name of current track",
-                    "-e", "set output to thisTitle",
-                    "-e", "end tell"])
+                now_playing = osascript(
+                    "osascript "
+                    "-e 'tell application \"iTunes\"' "
+                    "-e 'set thisTitle to name of current track' "
+                    "-e 'set output to thisTitle' "
+                    "-e 'end tell'"
+                )
                 return is_playing_bbc(now_playing, "iTunes")
 
     return False
