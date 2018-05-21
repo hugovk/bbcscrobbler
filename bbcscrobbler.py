@@ -2,13 +2,16 @@
 # Authors: Amr Hassan <amr.hassan@gmail.com>
 # and hugovk <https://github.com/hugovk>
 
+from __future__ import print_function, unicode_literals
+
 import argparse
 import atexit
 import os
-import pylast
-from sys import platform as _platform
 import subprocess
 import time
+from sys import platform as _platform
+
+import pylast
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
 
