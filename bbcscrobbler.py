@@ -183,7 +183,7 @@ def output(text):
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         import sys
 
-        sys.stdout.write("\x1b]2;" + text + "\x07")
+        sys.stdout.write("\x1b]2;" + str(text) + "\x07")
 
 
 def restore_terminal_title():
