@@ -1,7 +1,8 @@
 language: python
 cache: pip
 
-jobs:
+matrix:
+  fast_finish: true
   include:
     - python: 3.7
       dist: xenial
@@ -10,12 +11,11 @@ jobs:
     - python: pypy3
 
 install:
- - pip install pycodestyle pyflakes
+ - pip install -U pip
+ - pip install -U black flake8
 
 script:
  # Static analysis
- - pyflakes .
- - pycodestyle --statistics --count .
+ - flake8 --statistics --count
+ - black --check --diff .
 
-matrix:
-  fast_finish: true
