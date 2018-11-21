@@ -159,11 +159,7 @@ def check_media_player():
 def update_now_playing(track):
     if not track:
         return
-    network.update_now_playing(
-        track.artist.name,
-        track.title,
-        duration=duration(track)
-        )
+    network.update_now_playing(track.artist.name, track.title, duration=duration(track))
     output(f"Now playing: {track}")
 
 
@@ -171,10 +167,8 @@ def scrobble(track):
     if not track:
         return
     network.scrobble(
-        track.artist.name,
-        track.title,
-        track.start,
-        duration=duration(track))
+        track.artist.name, track.title, track.start, duration=duration(track)
+    )
     output(f"Scrobbled:   {track}")
 
 
@@ -233,8 +227,7 @@ if __name__ == "__main__":
         "-i",
         "--ignore-media-player",
         action="store_true",
-        help="Shortcut for --ignore-itunes on Mac or "
-             "--ignore-winamp on Windows",
+        help="Shortcut for --ignore-itunes on Mac or --ignore-winamp on Windows",
     )
     parser.add_argument(
         "--ignore-itunes",
@@ -273,9 +266,7 @@ if __name__ == "__main__":
         skg = pylast.SessionKeyGenerator(network)
         url = skg.get_web_auth_url()
 
-        print(
-            "Please authorize the scrobbler "
-            "to scrobble to your account: %s\n" % url)
+        print("Please authorize the scrobbler to scrobble to your account: %s\n" % url)
         import webbrowser
 
         webbrowser.open(url)
@@ -311,8 +302,7 @@ if __name__ == "__main__":
 
                 if last_station != args.station:
                     last_station = args.station
-                    output("Tuned in to %s\n---------------------" %
-                           args.station)
+                    output("Tuned in to %s\n---------------------" % args.station)
 
                 try:
                     # Get now playing track
