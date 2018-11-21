@@ -296,7 +296,10 @@ if __name__ == "__main__":
             if not check_media_player():
 
                 last_station = None
+                last_scrobbled = None
                 playing_track = None
+                np_time = None
+                scrobble_me_next = None
 
             else:
 
