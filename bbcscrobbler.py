@@ -1,8 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Authors: Amr Hassan <amr.hassan@gmail.com>
 # and hugovk <https://github.com/hugovk>
-
-from __future__ import print_function, unicode_literals
 
 import argparse
 import atexit
