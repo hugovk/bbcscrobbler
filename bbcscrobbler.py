@@ -12,6 +12,7 @@ import time
 from sys import platform as _platform
 
 import pylast
+from termcolor import colored  # pip3 install termcolor
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
 
@@ -62,7 +63,7 @@ def is_playing_bbc(now_playing, player_name):
         if "bbc" in station:
             args.station = station
         else:
-            output(player_name + ":      Wrong station")
+            output(player_name + ":      Wrong station", "warning")
             return False
         return True
     return False
@@ -88,7 +89,7 @@ def check_itunes():
             )
         )
         if count == 0:
-            output("iTunes:      not running")
+            output("iTunes:      not running", "warning")
         else:
 
             # Is iTunes playing?
@@ -98,7 +99,7 @@ def check_itunes():
             )
 
             if state != "playing":
-                output("iTunes:      " + state)
+                output("iTunes:      " + state, "warning")
             else:
                 # Is iTunes playing BBC Radio?
                 now_playing = osascript(
@@ -130,11 +131,11 @@ def check_winamp():
         state = win32api.SendMessage(handle, WM_USER, 0, 104)
 
         if state == 0:
-            output("Winamp:      stopped")
+            output("Winamp:      stopped", "warning")
         elif state == 3:
-            output("Winamp:      paused")
+            output("Winamp:      paused", "warning")
         elif state != 1:
-            output("Winamp:      unknown state " + state)
+            output("Winamp:      unknown state " + state, "warning")
         elif state == 1:  # playing
             # Is Winamp playing BBC Radio?
             now_playing = win32gui.GetWindowText(handle)
@@ -179,13 +180,18 @@ def scrobble(track):
     output("Scrobbled:   {}".format(track))
 
 
-def output(text):
+def output(text, type=None):
     global last_output
     if last_output == text:
         return
     else:
         last_output = text
-    print(text)
+    if type == "error":
+        print(colored(text, "red"))
+    elif type == "warning":
+        print(colored(text, "yellow"))
+    else:
+        print(text)
     # Windows:
     if _platform == "win32":
         if "&" in text:
@@ -353,9 +359,12 @@ if __name__ == "__main__":
 
                 except Escape:
                     pass
-                except (pylast.NetworkError,
-                        pylast.MalformedResponseError) as e:
-                    print("Error: {}".format(repr(e)))
+                except (
+                    KeyError,
+                    pylast.NetworkError,
+                    pylast.MalformedResponseError,
+                ) as e:
+                    output("Error: {}".format(repr(e)), "error")
 
             time.sleep(15)
 
