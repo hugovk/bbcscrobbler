@@ -164,7 +164,7 @@ def update_now_playing(track):
         track.title,
         duration=duration(track)
         )
-    output("Now playing: {}".format(track))
+    output(f"Now playing: {track}")
 
 
 def scrobble(track):
@@ -175,7 +175,7 @@ def scrobble(track):
         track.title,
         track.start,
         duration=duration(track))
-    output("Scrobbled:   {}".format(track))
+    output(f"Scrobbled:   {track}")
 
 
 def output(text, type=None):
