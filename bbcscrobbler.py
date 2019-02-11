@@ -5,14 +5,15 @@
 import argparse
 import atexit
 import os
+import shlex
 import subprocess
 import time
 from sys import platform as _platform
 
-import pylast
 from termcolor import colored  # pip3 install termcolor
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
+import pylast
 
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
@@ -156,11 +157,13 @@ def check_media_player():
         return True
 
 
-def update_now_playing(track):
+def update_now_playing(track, say_it):
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
     output(f"Now playing: {track}")
+    if say_it:
+        say(track)
 
 
 def scrobble(track):
@@ -209,6 +212,13 @@ def restore_terminal_title():
         pass  # TODO
 
 
+def say(thing):
+    """Mac only: Convert text to audible speech"""
+    if _platform == "darwin":
+        cmd = "say {}".format(shlex.quote(str(thing)))
+        os.system(cmd)
+
+
 def duration(track):
     """Return duration in seconds"""
     return track.end - track.start
@@ -249,6 +259,9 @@ if __name__ == "__main__":
         default="bbc6music",
         choices=("bbc6music", "bbcradio1", "bbcradio2", "bbc1xtra"),
         help="BBC station to scrobble",
+    )
+    parser.add_argument(
+        "-s", "--say", action="store_true", help="Mac only: Announcertron 4000"
     )
     args = parser.parse_args()
 
@@ -335,7 +348,7 @@ if __name__ == "__main__":
                             last_scrobbled = scrobble_me_next
 
                         playing_track = new_track
-                        update_now_playing(playing_track)
+                        update_now_playing(playing_track, args.say)
                         np_time = int(time.time())
 
                     # Scrobblable if 30 seconds has gone by
