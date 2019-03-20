@@ -62,21 +62,19 @@ def is_playing_bbc(now_playing, player_name):
         return False
     else:
         station = normalise_station(now_playing)
-        if "bbc" in station:
-            args.station = station
-        else:
+        if "bbc" not in station:
             output(player_name + ":      Wrong station", "warning")
             return False
         return True
     return False
 
 
-def check_itunes():
+def check_itunes(ignore):
     """
     If not Mac, return True.
     If Mac, return True if iTunes is now playing BBC Radio
     """
-    if args.ignore_itunes or _platform != "darwin":
+    if ignore or _platform != "darwin":
         return True
 
     else:
@@ -116,12 +114,12 @@ def check_itunes():
     return False
 
 
-def check_winamp():
+def check_winamp(ignore):
     """
     If not Windows, return True.
     If Windows, return True if Winamp is now playing BBC Radio
     """
-    if args.ignore_winamp or _platform != "win32":
+    if ignore or _platform != "win32":
         return True
 
     else:
@@ -146,21 +144,21 @@ def check_winamp():
         return False
 
 
-def check_media_player():
+def check_media_player(ignore_itunes, ignore_winamp):
     """
     If Mac, check iTunes.
     If Windows, check Winamp.
     Else return True.
     """
     if _platform == "darwin":
-        return check_itunes()
+        return check_itunes(ignore_itunes)
     elif _platform == "win32":
-        return check_winamp()
+        return check_winamp(ignore_winamp)
     else:
         return True
 
 
-def update_now_playing(track, say_it):
+def update_now_playing(network, track, say_it):
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
@@ -169,7 +167,7 @@ def update_now_playing(track, say_it):
         say(track)
 
 
-def scrobble(track):
+def scrobble(network, track):
     global pending_newline
     if not track:
         return
@@ -245,7 +243,7 @@ def duration(track):
     return track.end - track.start
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="BBC Radio scrobbler. "
         "On Mac: scrobbles BBC from iTunes if it's running, "
@@ -327,7 +325,7 @@ if __name__ == "__main__":
 
     try:
         while True:
-            if not check_media_player():
+            if not check_media_player(args.ignore_itunes, args.ignore_winamp):
 
                 last_station = None
                 last_scrobbled = None
@@ -364,12 +362,12 @@ if __name__ == "__main__":
                     if new_track != playing_track:
 
                         if scrobble_me_next:
-                            scrobble(scrobble_me_next)
+                            scrobble(network, scrobble_me_next)
                             scrobble_me_next = None
                             last_scrobbled = scrobble_me_next
 
                         playing_track = new_track
-                        update_now_playing(playing_track, args.say)
+                        update_now_playing(network, playing_track, args.say)
                         np_time = int(time.time())
 
                     # Scrobblable if 30 seconds has gone by
@@ -395,8 +393,12 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         if scrobble_me_next:
-            scrobble(scrobble_me_next)
+            scrobble(network, scrobble_me_next)
         print("exit")
+
+
+if __name__ == "__main__":
+    main()
 
 
 # End of file
