@@ -22,7 +22,10 @@ SESSION_KEY_FILE = os.path.join(os.path.expanduser("~"), ".session_key")
 ONE_HOUR_IN_SECONDS = 60 * 60
 
 last_output = None
+pending_newline = False
 WM_USER = 0x400
+
+TICK = colored("\u2713", "green")
 
 
 class Escape(Exception):
@@ -161,32 +164,49 @@ def update_now_playing(track, say_it):
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
-    output(f"Now playing: {track}")
+    output(str(track) + " ", newline=False)
     if say_it:
         say(track)
 
 
 def scrobble(track):
+    global pending_newline
     if not track:
         return
     network.scrobble(
         track.artist.name, track.title, track.start, duration=duration(track)
     )
-    output(f"Scrobbled:   {track}")
+    pending_newline = False
+    print(TICK)
 
 
-def output(text, type=None):
+def print_it(text, newline=True):
+    global pending_newline
+    if pending_newline:
+        pending_newline = False
+        print("")  # Newline
+
+    if newline:
+        pending_newline = False
+        print(text)
+    else:
+        pending_newline = True
+        print(text, end="", flush=True)
+
+
+def output(text, type=None, newline=True):
     global last_output
     if last_output == text:
         return
     else:
         last_output = text
+
     if type == "error":
-        print(colored(text, "red"))
+        print_it(colored(text, "red"), newline)
     elif type == "warning":
-        print(colored(text, "yellow"))
+        print_it(colored(text, "yellow"), newline)
     else:
-        print(text)
+        print_it(text, newline)
     # Windows:
     if _platform == "win32":
         if "&" in text:
@@ -196,7 +216,8 @@ def output(text, type=None):
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         import sys
 
-        sys.stdout.write("\x1b]2;" + str(text) + "\x07")
+        sys.stdout.write("\x1b]2;" + str(text).splitlines()[0] + "\x07")
+        sys.stdout.flush()
 
 
 def restore_terminal_title():
