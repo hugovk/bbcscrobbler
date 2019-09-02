@@ -23,6 +23,7 @@ ONE_HOUR_IN_SECONDS = 60 * 60
 
 last_output = None
 pending_newline = False
+playing_station = None
 WM_USER = 0x400
 
 TICK = colored("\u2713", "green")
@@ -57,12 +58,15 @@ def normalise_station(station):
 
 
 def is_playing_bbc(now_playing, player_name):
+    global playing_station
     if "bbc" not in now_playing.lower():
         output(player_name + ":      Not BBC")
         return False
     else:
         station = normalise_station(now_playing)
-        if "bbc" not in station:
+        if "bbc" in station:
+            playing_station = station
+        else:
             output(player_name + ":      Wrong station", "warning")
             return False
         return True
@@ -244,6 +248,8 @@ def duration(track):
 
 
 def main():
+    global playing_station
+
     parser = argparse.ArgumentParser(
         description="BBC Radio scrobbler. "
         "On Mac: scrobbles BBC from iTunes if it's running, "
@@ -322,6 +328,7 @@ def main():
     playing_track = None
     np_time = None
     scrobble_me_next = None
+    playing_station = args.station
 
     try:
         while True:
@@ -335,13 +342,13 @@ def main():
 
             else:
 
-                if last_station != args.station:
-                    last_station = args.station
-                    output("Tuned in to %s\n---------------------" % args.station)
+                if last_station != playing_station:
+                    last_station = playing_station
+                    output("Tuned in to %s\n---------------------" % playing_station)
 
                 try:
                     # Get now playing track
-                    realtime = bbcrealtime.nowplaying(args.station)
+                    realtime = bbcrealtime.nowplaying(playing_station)
                     if realtime:
                         new_track = pylast.Track(
                             realtime["artist"], realtime["title"], network
