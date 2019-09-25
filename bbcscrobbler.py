@@ -344,7 +344,10 @@ def main():
 
                 if last_station != playing_station:
                     last_station = playing_station
-                    output("Tuned in to %s\n---------------------" % playing_station)
+                    out = f"Tuned in to {playing_station}"
+                    output(out + "\n" + "-" * len(out))
+                    if args.say:
+                        say(playing_station)
 
                 try:
                     # Get now playing track
