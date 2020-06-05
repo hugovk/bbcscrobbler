@@ -247,6 +247,49 @@ def duration(track):
     return track.end - track.start
 
 
+def get_now_playing_from_bbcrealtime(network, playing_station):
+    realtime = bbcrealtime.nowplaying(playing_station)
+    if realtime:
+        new_track = pylast.Track(realtime["artist"], realtime["title"], network)
+        new_track.start = realtime["start"]
+        new_track.end = realtime["end"]
+    else:
+        new_track = None
+
+    return new_track
+
+
+def get_now_playing_from_lastfm(pylast_station):
+    #  Get last scrobbled track, because BBC stations don't
+    # usually use "now playing", but set songs as scrobbled
+    # soon as they're played.
+    # (But get two because sometimes there is a "now playing".)
+    try:
+        pylast_track = pylast_station.get_recent_tracks(2)[0]
+    except pylast.WSError:
+        # Operation failed - Most likely the backend service failed. Please try again.
+        return None
+
+    start = int(pylast_track.timestamp)
+    new_track = pylast_track.track
+    new_track.start = start
+    try:
+        new_track.end = start + pylast_track.track.get_duration()
+    except pylast.WSError:
+        # pylast.WSError: Track not found
+        # Pick something reasonable
+        new_track.end = start + 180
+
+    return new_track
+
+
+def get_now_playing(network, pylast_station, playing_station, scrobble_source):
+    if scrobble_source == "bbcrealtime":
+        return get_now_playing_from_bbcrealtime(network, playing_station)
+    else:
+        return get_now_playing_from_lastfm(pylast_station)
+
+
 def main():
     global playing_station
 
@@ -284,6 +327,13 @@ def main():
         default="bbc6music",
         choices=("bbc6music", "bbcradio1", "bbcradio2", "bbc1xtra"),
         help="BBC station to scrobble",
+    )
+    parser.add_argument(
+        "--source",
+        nargs="?",
+        default="lastfm",
+        choices=("bbcrealtime", "lastfm"),
+        help="Source to check now playing",
     )
     parser.add_argument(
         "-s", "--say", action="store_true", help="Mac only: Announcertron 4000"
@@ -344,6 +394,10 @@ def main():
 
                 if last_station != playing_station:
                     last_station = playing_station
+                    pylast_station = (
+                        network.get_user(playing_station) if args.source else None
+                    )
+
                     out = f"Tuned in to {playing_station}"
                     output(out + "\n" + "-" * len(out))
                     if args.say:
@@ -351,15 +405,9 @@ def main():
 
                 try:
                     # Get now playing track
-                    realtime = bbcrealtime.nowplaying(playing_station)
-                    if realtime:
-                        new_track = pylast.Track(
-                            realtime["artist"], realtime["title"], network
-                        )
-                        new_track.start = realtime["start"]
-                        new_track.end = realtime["end"]
-                    else:
-                        new_track = None
+                    new_track = get_now_playing(
+                        network, pylast_station, playing_station, args.source
+                    )
 
                     if (
                         new_track
