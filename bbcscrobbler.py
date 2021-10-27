@@ -33,14 +33,14 @@ class Escape(Exception):
     pass
 
 
-def osascript(args):
+def osascript(args) -> str:
     try:
         return subprocess.getoutput(args).strip()
     except Exception as e:
         return f"Error: {repr(e)}"
 
 
-def normalise_station(station):
+def normalise_station(station: str):
     if "BBC Radio 1" in station:
         station = "bbcradio1"
     elif "BBC 1Xtra" in station or "BBC Radio 1Xtra" in station:
@@ -57,7 +57,7 @@ def normalise_station(station):
     return station
 
 
-def is_playing_bbc(now_playing, player_name):
+def is_playing_bbc(now_playing: str, player_name: str) -> bool:
     global playing_station
     if "bbc" not in now_playing.lower():
         output(player_name + ":      Not BBC")
@@ -73,7 +73,7 @@ def is_playing_bbc(now_playing, player_name):
     return False
 
 
-def check_apple_music(ignore):
+def check_apple_music(ignore: bool) -> bool:
     """
     If not Mac, return True.
     If Mac, return True if Apple Music is now playing BBC Radio
@@ -117,7 +117,7 @@ def check_apple_music(ignore):
     return False
 
 
-def check_winamp(ignore):
+def check_winamp(ignore: bool) -> bool:
     """
     If not Windows, return True.
     If Windows, return True if Winamp is now playing BBC Radio
@@ -147,7 +147,7 @@ def check_winamp(ignore):
         return False
 
 
-def check_media_player(ignore_apple_music, ignore_winamp):
+def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
     """
     If Mac, check Apple Music.
     If Windows, check Winamp.
@@ -161,7 +161,7 @@ def check_media_player(ignore_apple_music, ignore_winamp):
         return True
 
 
-def update_now_playing(network, track, say_it):
+def update_now_playing(network, track, say_it: bool) -> None:
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
@@ -170,7 +170,7 @@ def update_now_playing(network, track, say_it):
         say(track)
 
 
-def scrobble(network, track):
+def scrobble(network, track) -> None:
     global pending_newline
     if not track:
         return
@@ -181,7 +181,7 @@ def scrobble(network, track):
     print(TICK)
 
 
-def print_it(text, newline=True):
+def print_it(text: str, newline: bool = True) -> None:
     global pending_newline
     if pending_newline:
         pending_newline = False
@@ -195,7 +195,7 @@ def print_it(text, newline=True):
         print(text, end="", flush=True)
 
 
-def output(text, type=None, newline=True):
+def output(text: str, type: str = None, newline: bool = True) -> None:
     global last_output
     if last_output == text:
         return
@@ -221,7 +221,7 @@ def output(text, type=None, newline=True):
         sys.stdout.flush()
 
 
-def restore_terminal_title():
+def restore_terminal_title() -> None:
     # Windows:
     if _platform == "win32":
         pass  # TODO
@@ -234,19 +234,19 @@ def restore_terminal_title():
         pass  # TODO
 
 
-def say(thing):
+def say(thing: str) -> None:
     """Mac only: Convert text to audible speech"""
     if _platform == "darwin":
         cmd = f"say {shlex.quote(str(thing))}"
         os.system(cmd)
 
 
-def duration(track):
+def duration(track) -> int:
     """Return duration in seconds"""
     return track.end - track.start
 
 
-def get_now_playing_from_bbcrealtime(network, playing_station):
+def get_now_playing_from_bbcrealtime(network, playing_station: str):
     realtime = bbcrealtime.nowplaying(playing_station)
     if realtime:
         new_track = pylast.Track(realtime["artist"], realtime["title"], network)
@@ -289,7 +289,7 @@ def get_now_playing(network, pylast_station, playing_station, scrobble_source):
         return get_now_playing_from_lastfm(pylast_station)
 
 
-def main():
+def main() -> None:
     global playing_station
 
     parser = argparse.ArgumentParser(
