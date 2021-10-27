@@ -8,7 +8,7 @@ bbcscrobbler
 A script to scrobble BBC Radio music to your Last.fm profile by copying scrobbles from the BBC radio accounts at Last.fm.
 
 Forget to stop the scrobbler running when stopping the radio and leaving the computer? Not to worry, bbcscrobbler.py
-only scrobbles when iTunes or Winamp is playing BBC radio.
+only scrobbles when Apple Music or Winamp is playing BBC radio.
 
 Basic use:
 
@@ -16,13 +16,13 @@ Basic use:
 bbcscrobbler.py
 ```
 
-Want to ignore iTunes/Winamp and scrobble via the web or from a real radio? Defaults to BBC 6 Music:
+Want to ignore Apple Music/Winamp and scrobble via the web or from a real radio? Defaults to BBC 6 Music:
 
 ```
 bbcscrobbler.py --ignore-media-player
 ```
 
-Or ignore iTunes/Winamp and scrobble a named station ([bbcradio1](https://www.last.fm/user/bbcradio1), [bbc1xtra](https://www.last.fm/user/bbc1xtra), [bbcradio2](https://www.last.fm/user/bbcradio2) or [bbc6music](https://www.last.fm/user/bbc6music)):
+Or ignore Apple Music/Winamp and scrobble a named station ([bbcradio1](https://www.last.fm/user/bbcradio1), [bbc1xtra](https://www.last.fm/user/bbc1xtra), [bbcradio2](https://www.last.fm/user/bbcradio2) or [bbc6music](https://www.last.fm/user/bbc6music)):
 
 ```
 bbcscrobbler.py bbc1xtra --ignore-media-player
@@ -70,26 +70,30 @@ Winamp:      paused
 
 Full usage:
 ```
-usage: bbcscrobbler.py [-h] [-i] [--ignore-itunes] [--ignore-winamp]
+usage: bbcscrobbler.py [-h] [-i] [--ignore-apple-music] [--ignore-winamp]
+                       [--source [{bbcrealtime,lastfm}]] [-s]
                        [{bbc6music,bbcradio1,bbcradio2,bbc1xtra}]
 
-BBC Radio scrobbler. On Mac: scrobbles BBC from iTunes if it's running, or the
-station of your choice if --ignore-itunes. On Windows: scrobbles BBC from
-Winamp if it's running, or the station of your choice if --ignore-winamp.
+BBC Radio scrobbler. On Mac: scrobbles BBC from Apple Music if it's running, or
+the station of your choice if --ignore-apple-music. On Windows: scrobbles BBC
+from Winamp if it's running, or the station of your choice if --ignore-winamp.
 
 positional arguments:
   {bbc6music,bbcradio1,bbcradio2,bbc1xtra}
                         BBC station to scrobble (default: bbc6music)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i, --ignore-media-player
-                        Shortcut for --ignore-itunes on Mac or --ignore-winamp
-                        on Windows (default: False)
-  --ignore-itunes       Mac only: Ignore whatever iTunes is doing and scrobble
-                        the station. For example, use this if listening via
-                        web or a real radio. (default: False)
+                        Shortcut for --ignore-apple-music on Mac or --ignore-
+                        winamp on Windows (default: False)
+  --ignore-apple-music  Mac only: Ignore whatever Apple Music is doing and
+                        scrobble the station. For example, use this if listening
+                        via web or a real radio. (default: False)
   --ignore-winamp       Windows only: Ignore whatever Winamp is doing and
-                        scrobble the station. For example, use this if
-                        listening via web or a real radio. (default: False)
+                        scrobble the station. For example, use this if listening
+                        via web or a real radio. (default: False)
+  --source [{bbcrealtime,lastfm}]
+                        Source to check now playing (default: lastfm)
+  -s, --say             Mac only: Announcertron 4000 (default: False)
 ```
