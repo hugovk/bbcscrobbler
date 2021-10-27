@@ -10,10 +10,10 @@ import subprocess
 import time
 from sys import platform as _platform
 
+import pylast
 from termcolor import colored  # pip3 install termcolor
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
-import pylast
 
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
@@ -33,14 +33,14 @@ class Escape(Exception):
     pass
 
 
-def osascript(args):
+def osascript(args) -> str:
     try:
         return subprocess.getoutput(args).strip()
     except Exception as e:
-        return "Error: {}".format(repr(e))
+        return f"Error: {repr(e)}"
 
 
-def normalise_station(station):
+def normalise_station(station: str):
     if "BBC Radio 1" in station:
         station = "bbcradio1"
     elif "BBC 1Xtra" in station or "BBC Radio 1Xtra" in station:
@@ -57,7 +57,7 @@ def normalise_station(station):
     return station
 
 
-def is_playing_bbc(now_playing, player_name):
+def is_playing_bbc(now_playing: str, player_name: str) -> bool:
     global playing_station
     if "bbc" not in now_playing.lower():
         output(player_name + ":      Not BBC")
@@ -73,52 +73,51 @@ def is_playing_bbc(now_playing, player_name):
     return False
 
 
-def check_itunes(ignore):
+def check_apple_music(ignore: bool) -> bool:
     """
     If not Mac, return True.
-    If Mac, return True if iTunes is now playing BBC Radio
+    If Mac, return True if Apple Music is now playing BBC Radio
     """
     if ignore or _platform != "darwin":
         return True
 
     else:
 
-        # Is iTunes running?
+        # Is Music running?
         count = int(
             osascript(
                 "osascript "
                 "-e 'tell application \"System Events\"' "
-                "-e 'count (every process whose name is \"iTunes\")' "
+                "-e 'count (every process whose name is \"Music\")' "
                 "-e 'end tell'"
             )
         )
         if count == 0:
-            output("iTunes:      not running", "warning")
+            output("Music:      not running", "warning")
         else:
 
-            # Is iTunes playing?
+            # Is Music playing?
             state = osascript(
-                "osascript "
-                "-e 'tell application \"iTunes\" to player state as string'"
+                "osascript -e 'tell application \"Music\" to player state as string'"
             )
 
             if state != "playing":
-                output("iTunes:      " + state, "warning")
+                output("Music:      " + state, "warning")
             else:
-                # Is iTunes playing BBC Radio?
+                # Is Music playing BBC Radio?
                 now_playing = osascript(
                     "osascript "
-                    "-e 'tell application \"iTunes\"' "
+                    "-e 'tell application \"Music\"' "
                     "-e 'set thisTitle to name of current track' "
                     "-e 'set output to thisTitle' "
                     "-e 'end tell'"
                 )
-                return is_playing_bbc(now_playing, "iTunes")
+                return is_playing_bbc(now_playing, "Music")
 
     return False
 
 
-def check_winamp(ignore):
+def check_winamp(ignore: bool) -> bool:
     """
     If not Windows, return True.
     If Windows, return True if Winamp is now playing BBC Radio
@@ -148,21 +147,21 @@ def check_winamp(ignore):
         return False
 
 
-def check_media_player(ignore_itunes, ignore_winamp):
+def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
     """
-    If Mac, check iTunes.
+    If Mac, check Apple Music.
     If Windows, check Winamp.
     Else return True.
     """
     if _platform == "darwin":
-        return check_itunes(ignore_itunes)
+        return check_apple_music(ignore_apple_music)
     elif _platform == "win32":
         return check_winamp(ignore_winamp)
     else:
         return True
 
 
-def update_now_playing(network, track, say_it):
+def update_now_playing(network, track, say_it: bool) -> None:
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
@@ -171,7 +170,7 @@ def update_now_playing(network, track, say_it):
         say(track)
 
 
-def scrobble(network, track):
+def scrobble(network, track) -> None:
     global pending_newline
     if not track:
         return
@@ -182,7 +181,7 @@ def scrobble(network, track):
     print(TICK)
 
 
-def print_it(text, newline=True):
+def print_it(text: str, newline: bool = True) -> None:
     global pending_newline
     if pending_newline:
         pending_newline = False
@@ -196,7 +195,7 @@ def print_it(text, newline=True):
         print(text, end="", flush=True)
 
 
-def output(text, type=None, newline=True):
+def output(text: str, type: str = None, newline: bool = True) -> None:
     global last_output
     if last_output == text:
         return
@@ -222,7 +221,7 @@ def output(text, type=None, newline=True):
         sys.stdout.flush()
 
 
-def restore_terminal_title():
+def restore_terminal_title() -> None:
     # Windows:
     if _platform == "win32":
         pass  # TODO
@@ -235,19 +234,19 @@ def restore_terminal_title():
         pass  # TODO
 
 
-def say(thing):
+def say(thing: str) -> None:
     """Mac only: Convert text to audible speech"""
     if _platform == "darwin":
-        cmd = "say {}".format(shlex.quote(str(thing)))
+        cmd = f"say {shlex.quote(str(thing))}"
         os.system(cmd)
 
 
-def duration(track):
+def duration(track) -> int:
     """Return duration in seconds"""
     return track.end - track.start
 
 
-def get_now_playing_from_bbcrealtime(network, playing_station):
+def get_now_playing_from_bbcrealtime(network, playing_station: str):
     realtime = bbcrealtime.nowplaying(playing_station)
     if realtime:
         new_track = pylast.Track(realtime["artist"], realtime["title"], network)
@@ -290,13 +289,13 @@ def get_now_playing(network, pylast_station, playing_station, scrobble_source):
         return get_now_playing_from_lastfm(pylast_station)
 
 
-def main():
+def main() -> None:
     global playing_station
 
     parser = argparse.ArgumentParser(
         description="BBC Radio scrobbler. "
-        "On Mac: scrobbles BBC from iTunes if it's running, "
-        "or the station of your choice if --ignore-itunes. "
+        "On Mac: scrobbles BBC from Apple Music if it's running, "
+        "or the station of your choice if --ignore-apple-music. "
         "On Windows: scrobbles BBC from Winamp if it's running, "
         "or the station of your choice if --ignore-winamp.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -305,12 +304,12 @@ def main():
         "-i",
         "--ignore-media-player",
         action="store_true",
-        help="Shortcut for --ignore-itunes on Mac or --ignore-winamp on Windows",
+        help="Shortcut for --ignore-apple-music on Mac or --ignore-winamp on Windows",
     )
     parser.add_argument(
-        "--ignore-itunes",
+        "--ignore-apple-music",
         action="store_true",
-        help="Mac only: Ignore whatever iTunes is doing and scrobble the "
+        help="Mac only: Ignore whatever Apple Music is doing and scrobble the "
         "station. For example, use this if listening via web or a real "
         "radio.",
     )
@@ -344,7 +343,7 @@ def main():
 
     if args.ignore_media_player:
         if _platform == "darwin":
-            args.ignore_itunes = True
+            args.ignore_apple_music = True
         elif _platform == "win32":
             args.ignore_winamp = True
 
@@ -382,7 +381,7 @@ def main():
 
     try:
         while True:
-            if not check_media_player(args.ignore_itunes, args.ignore_winamp):
+            if not check_media_player(args.ignore_apple_music, args.ignore_winamp):
 
                 last_station = None
                 last_scrobbled = None
@@ -445,7 +444,7 @@ def main():
                     pylast.NetworkError,
                     pylast.MalformedResponseError,
                 ) as e:
-                    output("Error: {}".format(repr(e)), "error")
+                    output(f"Error: {repr(e)}", "error")
 
             time.sleep(15)
 
