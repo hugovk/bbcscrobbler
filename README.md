@@ -7,8 +7,8 @@ bbcscrobbler
 
 A script to scrobble BBC Radio music to your Last.fm profile by copying scrobbles from the BBC radio accounts at Last.fm.
 
-Forget to stop the scrobbler running when stopping the radio and leaving the computer? Not to worry, bbcscrobbler.py 
-only scrobbles when iTunes or Winamp is playing BBC radio. 
+Forget to stop the scrobbler running when stopping the radio and leaving the computer? Not to worry, bbcscrobbler.py
+only scrobbles when iTunes or Winamp is playing BBC radio.
 
 Basic use:
 
@@ -16,7 +16,7 @@ Basic use:
 bbcscrobbler.py
 ```
 
-Want to ignore iTunes/Winamp and scrobble via the web or from a real radio? Defaults to BBC 6 Music: 
+Want to ignore iTunes/Winamp and scrobble via the web or from a real radio? Defaults to BBC 6 Music:
 
 ```
 bbcscrobbler.py --ignore-media-player
@@ -93,4 +93,3 @@ optional arguments:
                         scrobble the station. For example, use this if
                         listening via web or a real radio. (default: False)
 ```
-
