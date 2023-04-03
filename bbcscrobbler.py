@@ -2,20 +2,21 @@
 # Authors: Amr Hassan <amr.hassan@gmail.com>
 # and hugovk <https://github.com/hugovk>
 
+from __future__ import annotations
+
 import argparse
 import atexit
 import os
 import re
 import shlex
 import subprocess
-import time
 import sys
+import time
 from sys import platform as _platform
 
+import bbcrealtime  # https://github.com/hugovk/bbc-tools
 import pylast
 from termcolor import colored  # pip3 install termcolor
-
-import bbcrealtime  # https://github.com/hugovk/bbc-tools
 
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
