@@ -8,6 +8,7 @@ import os
 import shlex
 import subprocess
 import time
+import sys
 from sys import platform as _platform
 
 import pylast
@@ -82,7 +83,6 @@ def check_apple_music(ignore: bool) -> bool:
         return True
 
     else:
-
         # Is Music running?
         count = int(
             osascript(
@@ -95,7 +95,6 @@ def check_apple_music(ignore: bool) -> bool:
         if count == 0:
             output("Music:      not running", "warning")
         else:
-
             # Is Music playing?
             state = osascript(
                 "osascript -e 'tell application \"Music\" to player state as string'"
@@ -208,16 +207,21 @@ def output(text: str, type: str = None, newline: bool = True) -> None:
         print_it(colored(text, "yellow"), newline)
     else:
         print_it(text, newline)
+
+    # Update terminal tab
     # Windows:
     if _platform == "win32":
         if "&" in text:
             text = text.replace("&", "^&")  # escape ampersand
         os.system("title " + text)
-    # Linux, OS X or Cygwin:
+    # Linux or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
-        import sys
-
-        sys.stdout.write("\x1b]2;" + str(text).splitlines()[0] + "\x07")
+        text = str(text).splitlines()[0]
+        if _platform == "darwin":
+            text = "\033];" + text + "\007"
+        else:
+            text = "\x1b]2;" + text + "\x07"
+        sys.stdout.write(text)
         sys.stdout.flush()
 
 
@@ -225,7 +229,7 @@ def restore_terminal_title() -> None:
     # Windows:
     if _platform == "win32":
         pass  # TODO
-    # Linux, OS X or Cygwin:
+    # Linux, macOS or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
         # import sys
 
@@ -382,7 +386,6 @@ def main() -> None:
     try:
         while True:
             if not check_media_player(args.ignore_apple_music, args.ignore_winamp):
-
                 last_station = None
                 last_scrobbled = None
                 playing_track = None
@@ -390,7 +393,6 @@ def main() -> None:
                 scrobble_me_next = None
 
             else:
-
                 if last_station != playing_station:
                     last_station = playing_station
                     pylast_station = (
@@ -417,7 +419,6 @@ def main() -> None:
 
                     # A new, different track
                     if new_track != playing_track:
-
                         if scrobble_me_next:
                             scrobble(network, scrobble_me_next)
                             scrobble_me_next = None
@@ -456,6 +457,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-# End of file
