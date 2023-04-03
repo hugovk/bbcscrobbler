@@ -218,7 +218,10 @@ def output(text: str, type: str = None, newline: bool = True) -> None:
         print_it(text, newline)
 
     # Update terminal tab
-    text = escape_ansi(text)
+    text = text.splitlines()[0]  # Keep only first line, no underlines
+    text = " ".join(text.split())  # Remove duplicate whitespace
+    text = escape_ansi(text)  # Remove colour codes
+
     # Windows:
     if _platform == "win32":
         if "&" in text:
@@ -226,7 +229,6 @@ def output(text: str, type: str = None, newline: bool = True) -> None:
         os.system("title " + text)
     # Linux or Cygwin:
     elif _platform in ["linux", "linux2", "darwin", "cygwin"]:
-        text = str(text).splitlines()[0]
         if _platform == "darwin":
             text = "\033];" + text + "\007"
         else:
