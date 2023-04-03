@@ -5,6 +5,7 @@
 import argparse
 import atexit
 import os
+import re
 import shlex
 import subprocess
 import time
@@ -160,11 +161,19 @@ def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
         return True
 
 
+def escape_ansi(line: str) -> str:
+    """Remove ANSI colour codes and formatting"""
+    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
+    return ansi_escape.sub("", line)
+
+
 def update_now_playing(network, track, say_it: bool) -> None:
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
-    output(str(track) + " ", newline=False)
+    text = f"{track.artist} - {colored(track.title, attrs=['bold'])}"
+    output(text + " ", newline=False)
+
     if say_it:
         say(track)
 
@@ -209,6 +218,7 @@ def output(text: str, type: str = None, newline: bool = True) -> None:
         print_it(text, newline)
 
     # Update terminal tab
+    text = escape_ansi(text)
     # Windows:
     if _platform == "win32":
         if "&" in text:
