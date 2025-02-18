@@ -2,11 +2,21 @@ name: Lint
 
 on: [push, pull_request, workflow_dispatch]
 
+permissions: {}
+
+env:
+  FORCE_COLOR: 1
+  RUFF_OUTPUT_FORMAT: github
+
 jobs:
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/setup-python@v2.2.2
-      - uses: pre-commit/action@v2.0.3
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - uses: tox-dev/action-pre-commit-uv@v1
