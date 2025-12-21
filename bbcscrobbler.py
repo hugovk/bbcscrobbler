@@ -169,7 +169,9 @@ def escape_ansi(line: str) -> str:
     return ANSI_ESCAPE.sub("", line)
 
 
-def update_now_playing(network, track, say_it: bool) -> None:
+def update_now_playing(
+    network: pylast.LastFMNetwork, track: pylast.Track | None, say_it: bool
+) -> None:
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
@@ -180,7 +182,7 @@ def update_now_playing(network, track, say_it: bool) -> None:
         say(track)
 
 
-def scrobble(network, track) -> None:
+def scrobble(network: pylast.LastFMNetwork, track: pylast.Track | None) -> None:
     global pending_newline
     if not track:
         return
@@ -263,12 +265,12 @@ def say(thing: str) -> None:
         os.system(cmd)
 
 
-def duration(track) -> int:
+def duration(track: pylast.Track) -> int:
     """Return duration in seconds"""
     return track.end - track.start
 
 
-def get_now_playing(pylast_station):
+def get_now_playing(pylast_station: pylast.User) -> pylast.Track | None:
     #  Get last scrobbled track, because BBC stations don't
     # usually use "now playing", but set songs as scrobbled
     # soon as they're played.
