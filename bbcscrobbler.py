@@ -211,16 +211,16 @@ def print_it(text: str, newline: bool = True) -> None:
         print(text, end="", flush=True)
 
 
-def output(text: str, type: str = None, newline: bool = True) -> None:
+def output(text: str, level: str = None, newline: bool = True) -> None:
     global last_output
     if last_output == text:
         return
     else:
         last_output = text
 
-    if type == "error":
+    if level == "error":
         print_it(colored(text, "red"), newline)
-    elif type == "warning":
+    elif level == "warning":
         print_it(colored(text, "yellow"), newline)
     else:
         print_it(text, newline)
