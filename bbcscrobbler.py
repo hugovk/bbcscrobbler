@@ -142,7 +142,7 @@ def check_winamp(ignore: bool) -> bool:
         elif state == 3:
             output(f"Winamp:      {bold('paused')}", "warning")
         elif state != 1:
-            output(f"Winamp:      {bold('unknown state ' + state)}", "warning")
+            output(f"Winamp:      {bold(f'unknown state {state}')}", "warning")
         elif state == 1:  # playing
             # Is Winamp playing BBC Radio?
             now_playing = win32gui.GetWindowText(handle)
