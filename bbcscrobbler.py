@@ -360,7 +360,7 @@ def main() -> None:
         skg = pylast.SessionKeyGenerator(network)
         url = skg.get_web_auth_url()
 
-        print("Please authorize the scrobbler to scrobble to your account: %s\n" % url)
+        print(f"Please authorize the scrobbler to scrobble to your account: {url}\n")
         import webbrowser
 
         webbrowser.open(url)
