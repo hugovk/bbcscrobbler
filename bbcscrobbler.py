@@ -12,7 +12,7 @@ import shlex
 import subprocess
 import sys
 import time
-from functools import partial
+from functools import cache, partial
 from pathlib import Path
 from sys import platform as _platform
 
@@ -31,6 +31,7 @@ pending_newline = False
 playing_station = None
 WM_USER = 0x400
 
+ANSI_ESCAPE = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
 TICK = colored("\u2713", "green")
 bold = partial(colored, attrs=["bold"])
 
@@ -165,10 +166,10 @@ def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
         return True
 
 
+@cache
 def escape_ansi(line: str) -> str:
     """Remove ANSI colour codes and formatting"""
-    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
-    return ansi_escape.sub("", line)
+    return ANSI_ESCAPE.sub("", line)
 
 
 def update_now_playing(network, track, say_it: bool) -> None:
