@@ -12,6 +12,7 @@ import shlex
 import subprocess
 import sys
 import time
+from pathlib import Path
 from sys import platform as _platform
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
@@ -382,14 +383,12 @@ def main() -> None:
         while True:
             try:
                 session_key = skg.get_web_auth_session_key(url)
-                fp = open(SESSION_KEY_FILE, "w")
-                fp.write(session_key)
-                fp.close()
+                Path(SESSION_KEY_FILE).write_text(session_key)
                 break
             except pylast.WSError:
                 time.sleep(1)
     else:
-        session_key = open(SESSION_KEY_FILE).read()
+        session_key = Path(SESSION_KEY_FILE).read_text()
 
     network.session_key = session_key
 
