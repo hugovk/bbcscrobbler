@@ -87,38 +87,36 @@ def check_apple_music(ignore: bool) -> bool:
     if ignore or _platform != "darwin":
         return True
 
-    else:
-        # Is Music running?
-        count = int(
-            osascript(
-                "osascript "
-                "-e 'tell application \"System Events\"' "
-                "-e 'count (every process whose name is \"Music\")' "
-                "-e 'end tell'"
-            )
+    # Is Music running?
+    count = int(
+        osascript(
+            "osascript "
+            "-e 'tell application \"System Events\"' "
+            "-e 'count (every process whose name is \"Music\")' "
+            "-e 'end tell'"
         )
-        if count == 0:
-            output("Music:      " + bold("not running"), "warning")
-        else:
-            # Is Music playing?
-            state = osascript(
-                "osascript -e 'tell application \"Music\" to player state as string'"
-            )
+    )
+    if count == 0:
+        output("Music:      " + bold("not running"), "warning")
+        return False
 
-            if state != "playing":
-                output("Music:      " + bold(state), "warning")
-            else:
-                # Is Music playing BBC Radio?
-                now_playing = osascript(
-                    "osascript "
-                    "-e 'tell application \"Music\"' "
-                    "-e 'set thisTitle to name of current track' "
-                    "-e 'set output to thisTitle' "
-                    "-e 'end tell'"
-                )
-                return is_playing_bbc(now_playing, "Music")
+    # Is Music playing?
+    state = osascript(
+        "osascript -e 'tell application \"Music\" to player state as string'"
+    )
+    if state != "playing":
+        output("Music:      " + bold(state), "warning")
+        return False
 
-    return False
+    # Is Music playing BBC Radio?
+    now_playing = osascript(
+        "osascript "
+        "-e 'tell application \"Music\"' "
+        "-e 'set thisTitle to name of current track' "
+        "-e 'set output to thisTitle' "
+        "-e 'end tell'"
+    )
+    return is_playing_bbc(now_playing, "Music")
 
 
 def check_winamp(ignore: bool) -> bool:
@@ -129,26 +127,26 @@ def check_winamp(ignore: bool) -> bool:
     if ignore or _platform != "win32":
         return True
 
-    else:
-        # Is Winamp playing?
-        import win32api
-        import win32gui
+    # Is Winamp playing?
+    import win32api
+    import win32gui
 
-        handle = win32gui.FindWindow("Winamp v1.x", None)
-        state = win32api.SendMessage(handle, WM_USER, 0, 104)
+    handle = win32gui.FindWindow("Winamp v1.x", None)
+    state = win32api.SendMessage(handle, WM_USER, 0, 104)
 
-        if state == 0:
-            output(f"Winamp:      {bold('stopped')}", "warning")
-        elif state == 3:
-            output(f"Winamp:      {bold('paused')}", "warning")
-        elif state != 1:
-            output(f"Winamp:      {bold(f'unknown state {state}')}", "warning")
-        elif state == 1:  # playing
-            # Is Winamp playing BBC Radio?
-            now_playing = win32gui.GetWindowText(handle)
-            return is_playing_bbc(now_playing, "Winamp")
-
+    if state == 0:
+        output(f"Winamp:      {bold('stopped')}", "warning")
         return False
+    elif state == 3:
+        output(f"Winamp:      {bold('paused')}", "warning")
+        return False
+    elif state != 1:
+        output(f"Winamp:      {bold(f'unknown state {state}')}", "warning")
+        return False
+    else:
+        # Is Winamp playing BBC Radio?
+        now_playing = win32gui.GetWindowText(handle)
+        return is_playing_bbc(now_playing, "Winamp")
 
 
 def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
