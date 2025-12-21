@@ -12,6 +12,7 @@ import shlex
 import subprocess
 import sys
 import time
+from functools import partial
 from pathlib import Path
 from sys import platform as _platform
 
@@ -31,6 +32,7 @@ playing_station = None
 WM_USER = 0x400
 
 TICK = colored("\u2713", "green")
+bold = partial(colored, attrs=["bold"])
 
 
 class Escape(Exception):
@@ -96,7 +98,7 @@ def check_apple_music(ignore: bool) -> bool:
             )
         )
         if count == 0:
-            output("Music:      not running", "warning")
+            output("Music:      " + bold("not running"), "warning")
         else:
             # Is Music playing?
             state = osascript(
@@ -104,7 +106,7 @@ def check_apple_music(ignore: bool) -> bool:
             )
 
             if state != "playing":
-                output("Music:      " + state, "warning")
+                output("Music:      " + bold(state), "warning")
             else:
                 # Is Music playing BBC Radio?
                 now_playing = osascript(
@@ -136,11 +138,11 @@ def check_winamp(ignore: bool) -> bool:
         state = win32api.SendMessage(handle, WM_USER, 0, 104)
 
         if state == 0:
-            output("Winamp:      stopped", "warning")
+            output(f"Winamp:      {bold('stopped')}", "warning")
         elif state == 3:
-            output("Winamp:      paused", "warning")
+            output(f"Winamp:      {bold('paused')}", "warning")
         elif state != 1:
-            output("Winamp:      unknown state " + state, "warning")
+            output(f"Winamp:      {bold('unknown state ' + state)}", "warning")
         elif state == 1:  # playing
             # Is Winamp playing BBC Radio?
             now_playing = win32gui.GetWindowText(handle)
@@ -173,7 +175,7 @@ def update_now_playing(network, track, say_it: bool) -> None:
     if not track:
         return
     network.update_now_playing(track.artist.name, track.title, duration=duration(track))
-    text = f"{track.artist} - {colored(track.title, attrs=['bold'])}"
+    text = f"{track.artist} - {bold(track.title)}"
     output(text + " ", newline=False)
 
     if say_it:
@@ -415,8 +417,8 @@ def main() -> None:
                         network.get_user(playing_station) if args.source else None
                     )
 
-                    out = f"Tuned in to {playing_station}"
-                    output(out + "\n" + "-" * len(out))
+                    out = f"Tuned in to {bold(playing_station)}"
+                    output(out + "\n" + "-" * len(escape_ansi(out)))
                     if args.say:
                         say(playing_station)
 
