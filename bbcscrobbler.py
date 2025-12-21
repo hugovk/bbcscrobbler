@@ -290,7 +290,16 @@ def get_now_playing_from_lastfm(pylast_station):
     # (But get two because sometimes there is a "now playing".)
     try:
         pylast_track = pylast_station.get_recent_tracks(2)[0]
-    except pylast.WSError:
+    except (
+        IndexError,
+        pylast.MalformedResponseError,
+        pylast.NetworkError,
+        pylast.PyLastError,
+        pylast.WSError,
+    ):
+        # NetworkError: [Errno 8] nodename nor servname provided, or not known
+        # Malformed response from Last.fm. Underlying error:
+        #   Connection to the API failed with HTTP code 500
         # Operation failed - Most likely the backend service failed. Please try again.
         return None
 
@@ -452,6 +461,7 @@ def main() -> None:
                         now = int(time.time())
                         if (
                             playing_track
+                            and np_time
                             and playing_track != last_scrobbled
                             and now - np_time >= 30
                         ):
@@ -463,8 +473,9 @@ def main() -> None:
                     KeyError,
                     pylast.NetworkError,
                     pylast.MalformedResponseError,
+                    pylast.WSError,
                 ) as e:
-                    output(f"Error: {repr(e)}", "error")
+                    output(f"Error: {e}", "error")
 
             time.sleep(15)
 
