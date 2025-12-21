@@ -15,8 +15,8 @@ import time
 from sys import platform as _platform
 
 import bbcrealtime  # https://github.com/hugovk/bbc-tools
-import pylast
-from termcolor import colored  # pip3 install termcolor
+import pylast  # pip install pylast>=7
+from termcolor import colored  # pip install termcolor
 
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
@@ -184,7 +184,11 @@ def scrobble(network, track) -> None:
     if not track:
         return
     network.scrobble(
-        track.artist.name, track.title, track.start, duration=duration(track)
+        track.artist.name,
+        track.title,
+        track.start,
+        duration=duration(track),
+        chosen_by_user=False,
     )
     pending_newline = False
     print(TICK)

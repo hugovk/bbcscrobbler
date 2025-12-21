@@ -1,2 +1,2 @@
-pylast
+pylast>=7
 termcolor
