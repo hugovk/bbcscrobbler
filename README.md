@@ -1,8 +1,8 @@
 # bbcscrobbler
 
 [![Lint](https://github.com/hugovk/bbcscrobbler/actions/workflows/lint.yml/badge.svg)](https://github.com/hugovk/bbcscrobbler/actions/workflows/lint.yml)
-[![Python: 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
 A script to scrobble BBC Radio music to your Last.fm profile by copying scrobbles from
 the BBC radio accounts at Last.fm.
