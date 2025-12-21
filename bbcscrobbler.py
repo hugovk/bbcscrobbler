@@ -16,7 +16,6 @@ from functools import cache, partial
 from pathlib import Path
 from sys import platform as _platform
 
-import bbcrealtime  # https://github.com/hugovk/bbc-tools
 import pylast  # pip install pylast>=7
 from termcolor import colored  # pip install termcolor
 
@@ -271,19 +270,7 @@ def duration(track) -> int:
     return track.end - track.start
 
 
-def get_now_playing_from_bbcrealtime(network, playing_station: str):
-    realtime = bbcrealtime.nowplaying(playing_station)
-    if realtime:
-        new_track = pylast.Track(realtime["artist"], realtime["title"], network)
-        new_track.start = realtime["start"]
-        new_track.end = realtime["end"]
-    else:
-        new_track = None
-
-    return new_track
-
-
-def get_now_playing_from_lastfm(pylast_station):
+def get_now_playing(pylast_station):
     #  Get last scrobbled track, because BBC stations don't
     # usually use "now playing", but set songs as scrobbled
     # soon as they're played.
@@ -314,13 +301,6 @@ def get_now_playing_from_lastfm(pylast_station):
         new_track.end = start + 180
 
     return new_track
-
-
-def get_now_playing(network, pylast_station, playing_station, scrobble_source):
-    if scrobble_source == "bbcrealtime":
-        return get_now_playing_from_bbcrealtime(network, playing_station)
-    else:
-        return get_now_playing_from_lastfm(pylast_station)
 
 
 def main() -> None:
@@ -360,13 +340,6 @@ def main() -> None:
         default="bbc6music",
         choices=("bbc6music", "bbcradio1", "bbcradio2", "bbc1xtra"),
         help="BBC station to scrobble",
-    )
-    parser.add_argument(
-        "--source",
-        nargs="?",
-        default="lastfm",
-        choices=("bbcrealtime", "lastfm"),
-        help="Source to check now playing",
     )
     parser.add_argument(
         "-s", "--say", action="store_true", help="Mac only: Announcertron 4000"
@@ -423,9 +396,7 @@ def main() -> None:
             else:
                 if last_station != playing_station:
                     last_station = playing_station
-                    pylast_station = (
-                        network.get_user(playing_station) if args.source else None
-                    )
+                    pylast_station = network.get_user(playing_station)
 
                     out = f"Tuned in to {bold(playing_station)}"
                     output(out + "\n" + "-" * len(escape_ansi(out)))
@@ -434,9 +405,7 @@ def main() -> None:
 
                 try:
                     # Get now playing track
-                    new_track = get_now_playing(
-                        network, pylast_station, playing_station, args.source
-                    )
+                    new_track = get_now_playing(pylast_station)
 
                     if (
                         new_track

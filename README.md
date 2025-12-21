@@ -76,8 +76,7 @@ Winamp:      paused
 Full usage:
 
 ```
-usage: bbcscrobbler.py [-h] [-i] [--ignore-apple-music] [--ignore-winamp]
-                       [--source [{bbcrealtime,lastfm}]] [-s]
+usage: bbcscrobbler.py [-h] [-i] [--ignore-apple-music] [--ignore-winamp] [-s]
                        [{bbc6music,bbcradio1,bbcradio2,bbc1xtra}]
 
 BBC Radio scrobbler. On Mac: scrobbles BBC from Apple Music if it's running, or
@@ -99,7 +98,5 @@ options:
   --ignore-winamp       Windows only: Ignore whatever Winamp is doing and
                         scrobble the station. For example, use this if listening
                         via web or a real radio. (default: False)
-  --source [{bbcrealtime,lastfm}]
-                        Source to check now playing (default: lastfm)
   -s, --say             Mac only: Announcertron 4000 (default: False)
 ```
