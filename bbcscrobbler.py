@@ -79,14 +79,10 @@ def is_playing_bbc(now_playing: str, player_name: str) -> bool:
     return False
 
 
-def check_apple_music(ignore: bool) -> bool:
+def apple_music_playing() -> bool:
     """
-    If not Mac, return True.
-    If Mac, return True if Apple Music is now playing BBC Radio
+    Return True if Apple Music is now playing BBC Radio
     """
-    if ignore:
-        return True
-
     # Is Music running?
     count = int(
         osascript(
@@ -119,14 +115,11 @@ def check_apple_music(ignore: bool) -> bool:
     return is_playing_bbc(now_playing, "Music")
 
 
-def check_winamp(ignore: bool) -> bool:
+def winamp_playing() -> bool:
     """
     If not Windows, return True.
     If Windows, return True if Winamp is now playing BBC Radio
     """
-    if ignore:
-        return True
-
     # Is Winamp playing?
     import win32api
     import win32gui
@@ -149,16 +142,19 @@ def check_winamp(ignore: bool) -> bool:
         return is_playing_bbc(now_playing, "Winamp")
 
 
-def check_media_player(ignore: bool) -> bool:
+def bbc_playing(ignore: bool) -> bool:
     """
-    If Mac, check Apple Music.
+    If ignore=True, return True.
+    If macOS, check Apple Music.
     If Windows, check Winamp.
     Else return True.
     """
-    if _platform == "darwin":
-        return check_apple_music(ignore)
+    if ignore:
+        return True
+    elif _platform == "darwin":
+        return apple_music_playing()
     elif _platform == "win32":
-        return check_winamp(ignore)
+        return winamp_playing()
     else:
         return True
 
@@ -383,7 +379,7 @@ def main() -> None:
 
     try:
         while True:
-            if not check_media_player(args.ignore_media_player):
+            if not bbc_playing(args.ignore_media_player):
                 last_station = None
                 last_scrobbled = None
                 playing_track = None
