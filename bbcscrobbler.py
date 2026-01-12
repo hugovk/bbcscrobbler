@@ -84,7 +84,7 @@ def check_apple_music(ignore: bool) -> bool:
     If not Mac, return True.
     If Mac, return True if Apple Music is now playing BBC Radio
     """
-    if ignore or _platform != "darwin":
+    if ignore:
         return True
 
     # Is Music running?
@@ -124,7 +124,7 @@ def check_winamp(ignore: bool) -> bool:
     If not Windows, return True.
     If Windows, return True if Winamp is now playing BBC Radio
     """
-    if ignore or _platform != "win32":
+    if ignore:
         return True
 
     # Is Winamp playing?
