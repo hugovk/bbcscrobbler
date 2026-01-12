@@ -149,16 +149,16 @@ def check_winamp(ignore: bool) -> bool:
         return is_playing_bbc(now_playing, "Winamp")
 
 
-def check_media_player(ignore_apple_music: bool, ignore_winamp: bool) -> bool:
+def check_media_player(ignore: bool) -> bool:
     """
     If Mac, check Apple Music.
     If Windows, check Winamp.
     Else return True.
     """
     if _platform == "darwin":
-        return check_apple_music(ignore_apple_music)
+        return check_apple_music(ignore)
     elif _platform == "win32":
-        return check_winamp(ignore_winamp)
+        return check_winamp(ignore)
     else:
         return True
 
@@ -308,31 +308,29 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(
         description="BBC Radio scrobbler. "
-        "On Mac: scrobbles BBC from Apple Music if it's running, "
-        "or the station of your choice if --ignore-apple-music. "
-        "On Windows: scrobbles BBC from Winamp if it's running, "
-        "or the station of your choice if --ignore-winamp.",
+        "Scrobbles from Apple Music (macOS) or Winamp (Windows) if it's running. "
+        "Or the station of your choice with `--ignore-media-player`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-i",
         "--ignore-media-player",
         action="store_true",
-        help="Shortcut for --ignore-apple-music on Mac or --ignore-winamp on Windows",
+        help="Ignore whatever Apple Music (macOS) and Winamp (Windows) "
+        "is doing and scrobble the station. "
+        "For example, use this if listening via web or a real radio.",
     )
     parser.add_argument(
         "--ignore-apple-music",
         action="store_true",
-        help="Mac only: Ignore whatever Apple Music is doing and scrobble the "
-        "station. For example, use this if listening via web or a real "
-        "radio.",
+        help="Deprecated, use --ignore-media-player instead.",
+        deprecated=True,
     )
     parser.add_argument(
         "--ignore-winamp",
         action="store_true",
-        help="Windows only: Ignore whatever Winamp is doing and scrobble the "
-        "station. For example, use this if listening via web or a real "
-        "radio.",
+        help="Deprecated, use --ignore-media-player instead.",
+        deprecated=True,
     )
     parser.add_argument(
         "station",
@@ -348,11 +346,10 @@ def main() -> None:
 
     atexit.register(restore_terminal_title)
 
-    if args.ignore_media_player:
-        if _platform == "darwin":
-            args.ignore_apple_music = True
-        elif _platform == "win32":
-            args.ignore_winamp = True
+    if args.ignore_apple_music or args.ignore_winamp:
+        args.ignore_media_player = True
+        del args.ignore_apple_music
+        del args.ignore_winamp
 
     network = pylast.LastFMNetwork(API_KEY, API_SECRET)
 
@@ -386,7 +383,7 @@ def main() -> None:
 
     try:
         while True:
-            if not check_media_player(args.ignore_apple_music, args.ignore_winamp):
+            if not check_media_player(args.ignore_media_player):
                 last_station = None
                 last_scrobbled = None
                 playing_track = None
