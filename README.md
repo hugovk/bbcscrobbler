@@ -14,6 +14,9 @@ radio.
 Basic use:
 
 ```sh
+uv run bbcscrobbler.py
+# or
+pip install -r requirements.txt
 bbcscrobbler.py
 ```
 
@@ -24,8 +27,8 @@ Defaults to BBC 6 Music:
 bbcscrobbler.py --ignore-media-player
 ```
 
-Or ignore Apple Music/Winamp and scrobble a named station(
-[bbcradio1](https://www.last.fm/user/bbcradio1),
+Or ignore Apple Music/Winamp and scrobble a named station
+([bbcradio1](https://www.last.fm/user/bbcradio1),
 [bbc1xtra](https://www.last.fm/user/bbc1xtra),
 [bbcradio2](https://www.last.fm/user/bbcradio2) or
 [bbc6music](https://www.last.fm/user/bbc6music)):
@@ -40,36 +43,30 @@ Example output:
 > bbcscrobbler.py
 Tuned in to bbc6music
 ---------------------
-Now playing: Annie Eve - Shuffle
-Scrobbled:   Annie Eve - Shuffle
-Now playing: Nightmares on Wax - Les Nuits
-Scrobbled:   Nightmares on Wax - Les Nuits
-Now playing: Black Rebel Motorcycle Club - Spread Your Love
-Scrobbled:   Black Rebel Motorcycle Club - Spread Your Love
-Now playing: Cate le Bon - Sisters
-Scrobbled:   Cate le Bon - Sisters
-Now playing: Grace Jones - I've Seen That Face Before (Libertango)
-Scrobbled:   Grace Jones - I've Seen That Face Before (Libertango)
-Now playing: Sly & Robbie - Boops (Here To Go)
+Annie Eve - Shuffle ✓
+Nightmares on Wax - Les Nuits ✓
+Black Rebel Motorcycle Club - Spread Your Love ✓
+Cate le Bon - Sisters ✓
+Grace Jones - I've Seen That Face Before (Libertango) ✓
+Sly & Robbie - Boops (Here To Go)
 Tuned in to bbcradio1
 ---------------------
-Now playing: Klingande - Jubel
+Klingande - Jubel
 Tuned in to bbcradio2
 ---------------------
-Now playing: Prince & The Revolution - Let's Go Crazy
+Prince & The Revolution - Let's Go Crazy
 Winamp:      Wrong station
 Tuned in to bbc1xtra
 ---------------------
-Now playing: Alicia Keys - It's On Again (feat. Kendrick Lamar)
+Alicia Keys - It's On Again (feat. Kendrick Lamar)
 Tuned in to bbc6music
 ---------------------
-Now playing: Sly & Robbie - Boops (Here To Go)
+Sly & Robbie - Boops (Here To Go)
 Winamp:      paused
 Winamp:      stopped
 Tuned in to bbc6music
 ---------------------
-Now playing: Joanna Gruesome - Anti-Parent Cowboy Killers
-Scrobbled:   Joanna Gruesome - Anti-Parent Cowboy Killers
+Joanna Gruesome - Anti-Parent Cowboy Killers ✓
 Winamp:      paused
 ```
 
@@ -79,9 +76,8 @@ Full usage:
 usage: bbcscrobbler.py [-h] [-i] [--ignore-apple-music] [--ignore-winamp] [-s]
                        [{bbc6music,bbcradio1,bbcradio2,bbc1xtra}]
 
-BBC Radio scrobbler. On Mac: scrobbles BBC from Apple Music if it's running, or
-the station of your choice if --ignore-apple-music. On Windows: scrobbles BBC
-from Winamp if it's running, or the station of your choice if --ignore-winamp.
+BBC Radio scrobbler. Scrobbles from Apple Music (macOS) or Winamp (Windows) if
+it's running. Or the station of your choice with `--ignore-media-player`.
 
 positional arguments:
   {bbc6music,bbcradio1,bbcradio2,bbc1xtra}
@@ -90,13 +86,13 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -i, --ignore-media-player
-                        Shortcut for --ignore-apple-music on Mac or --ignore-
-                        winamp on Windows (default: False)
-  --ignore-apple-music  Mac only: Ignore whatever Apple Music is doing and
-                        scrobble the station. For example, use this if listening
-                        via web or a real radio. (default: False)
-  --ignore-winamp       Windows only: Ignore whatever Winamp is doing and
-                        scrobble the station. For example, use this if listening
-                        via web or a real radio. (default: False)
+                        Ignore whatever Apple Music (macOS) and Winamp
+                        (Windows) is doing and scrobble the station. For
+                        example, use this if listening via web or a real radio.
+                        (default: False)
+  --ignore-apple-music  Deprecated, use --ignore-media-player instead.
+                        (default: False)
+  --ignore-winamp       Deprecated, use --ignore-media-player instead.
+                        (default: False)
   -s, --say             Mac only: Announcertron 4000 (default: False)
 ```

@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "pylast>=7",
+#     "termcolor",
+# ]
+# ///
 # Authors: Amr Hassan <amr.hassan@gmail.com>
 # and hugovk <https://github.com/hugovk>
 
