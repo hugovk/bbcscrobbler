@@ -26,6 +26,9 @@ from sys import platform as _platform
 import pylast  # pip install pylast>=7
 from termcolor import colored  # pip install termcolor
 
+print(sys.version)
+print(pylast.__version__)
+
 API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
 
