@@ -94,14 +94,18 @@ def apple_music_playing() -> bool:
     Return True if Apple Music is now playing BBC Radio
     """
     # Is Music running?
-    count = int(
-        osascript(
-            "osascript "
-            "-e 'tell application \"System Events\"' "
-            "-e 'count (every process whose name is \"Music\")' "
-            "-e 'end tell'"
-        )
+    count_output = osascript(
+        "osascript "
+        "-e 'tell application \"System Events\"' "
+        "-e 'count (every process whose name is \"Music\")' "
+        "-e 'end tell'"
     )
+    try:
+        count = int(count_output)
+    except ValueError:
+        # osascript failed or produced no output, treat as transient
+        output(f"Music:      osascript error: {count_output or 'no output'}", "error")
+        return False
     if count == 0:
         output("Music:      " + bold("not running"), "warning")
         return False
