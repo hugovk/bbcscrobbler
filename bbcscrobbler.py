@@ -53,7 +53,7 @@ def osascript(args) -> str:
     try:
         return subprocess.getoutput(args).strip()
     except Exception as e:
-        return f"Error: {repr(e)}"
+        return f"Error: {bold(repr(e))}"
 
 
 def normalise_station(station: str):
@@ -447,7 +447,7 @@ def main() -> None:
                     pylast.MalformedResponseError,
                     pylast.WSError,
                 ) as e:
-                    output(f"Error: {e}", "error")
+                    output(f"Error: {bold(e)}", "error")
 
             time.sleep(15)
 
