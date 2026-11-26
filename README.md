@@ -4,8 +4,8 @@
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
-A script to scrobble BBC Radio music to your Last.fm profile by copying scrobbles from
-the BBC radio accounts at Last.fm.
+A script to scrobble BBC Radio music to your Last.fm profile using the now playing
+data from BBC Sounds.
 
 Forget to stop the scrobbler running when stopping the radio and leaving the computer?
 Not to worry, bbcscrobbler.py only scrobbles when Apple Music or Winamp is playing BBC

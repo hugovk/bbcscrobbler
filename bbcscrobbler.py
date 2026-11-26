@@ -13,12 +13,16 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import datetime as dt
+import json
 import os
 import re
 import shlex
 import subprocess
 import sys
 import time
+import urllib.request
+from dataclasses import dataclass, field
 from functools import cache, partial
 from pathlib import Path
 from sys import platform as _platform
@@ -33,11 +37,20 @@ API_KEY = "8fe0d07b4879e9cd6f8d78d86a8f447c"
 API_SECRET = "debb11ad5da3be07d06fddd8fe95cc42"
 
 SESSION_KEY_FILE = os.path.join(os.path.expanduser("~"), ".session_key.bbcscrobbler")
-ONE_HOUR_IN_SECONDS = 60 * 60
+
+BBC_API = "https://rms.api.bbc.co.uk/v2"
+BBC_SERVICES = {
+    "bbc1xtra": "bbc_1xtra",
+    "bbc6music": "bbc_6music",
+    "bbcradio1": "bbc_radio_one",
+    "bbcradio2": "bbc_radio_two",
+}
 
 last_output = None
 pending_newline = False
 playing_station = None
+broadcasts = {}
+ONE_HOUR_IN_SECONDS = 60 * 60
 WM_USER = 0x400
 
 ANSI_ESCAPE = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
@@ -45,8 +58,18 @@ TICK = colored("\u2713", "green")
 bold = partial(colored, attrs=["bold"])
 
 
-class Escape(Exception):
-    pass
+@dataclass(frozen=True, slots=True)
+class Track:
+    """A track played on a BBC station, compared by its BBC segment ID"""
+
+    id: str
+    artist: str = field(compare=False)
+    title: str = field(compare=False)
+    start: int = field(compare=False)  # Unix timestamp
+    end: int = field(compare=False)  # Unix timestamp
+
+    def __str__(self) -> str:
+        return f"{self.artist} - {self.title}"
 
 
 def osascript(args) -> str:
@@ -180,11 +203,11 @@ def escape_ansi(line: str) -> str:
 
 
 def update_now_playing(
-    network: pylast.LastFMNetwork, track: pylast.Track | None, say_it: bool
+    network: pylast.LastFMNetwork, track: Track | None, say_it: bool
 ) -> None:
     if not track:
         return
-    network.update_now_playing(track.artist.name, track.title, duration=duration(track))
+    network.update_now_playing(track.artist, track.title, duration=duration(track))
     text = f"{track.artist} - {bold(track.title)}"
     output(text + " ", newline=False)
 
@@ -192,12 +215,12 @@ def update_now_playing(
         say(track)
 
 
-def scrobble(network: pylast.LastFMNetwork, track: pylast.Track | None) -> None:
+def scrobble(network: pylast.LastFMNetwork, track: Track | None) -> None:
     global pending_newline
     if not track:
         return
     network.scrobble(
-        track.artist.name,
+        track.artist,
         track.title,
         track.start,
         duration=duration(track),
@@ -275,42 +298,62 @@ def say(thing: str) -> None:
         os.system(cmd)
 
 
-def duration(track: pylast.Track) -> int:
+def duration(track: Track) -> int:
     """Return duration in seconds"""
     return track.end - track.start
 
 
-def get_now_playing(pylast_station: pylast.User) -> pylast.Track | None:
-    #  Get last scrobbled track, because BBC stations don't
-    # usually use "now playing", but set songs as scrobbled
-    # soon as they're played.
-    # (But get two because sometimes there is a "now playing".)
-    try:
-        pylast_track = pylast_station.get_recent_tracks(2)[0]
-    except (
-        IndexError,
-        pylast.MalformedResponseError,
-        pylast.NetworkError,
-        pylast.PyLastError,
-        pylast.WSError,
-    ):
-        # NetworkError: [Errno 8] nodename nor servname provided, or not known
-        # Malformed response from Last.fm. Underlying error:
-        #   Connection to the API failed with HTTP code 500
-        # Operation failed - Most likely the backend service failed. Please try again.
-        return None
+def fetch_json(url: str) -> dict:
+    request = urllib.request.Request(url, headers={"User-Agent": "bbcscrobbler"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.load(response)
 
-    start = int(pylast_track.timestamp)
-    new_track = pylast_track.track
-    new_track.start = start
-    try:
-        new_track.end = start + pylast_track.track.get_duration()
-    except pylast.WSError:
-        # pylast.WSError: Track not found
-        # Pick something reasonable
-        new_track.end = start + 180
 
-    return new_track
+def parse_time(timestamp: str) -> int:
+    """Convert an ISO 8601 timestamp like 2026-11-26T16:00:00Z to a Unix timestamp"""
+    return int(dt.datetime.fromisoformat(timestamp.replace("Z", "+00:00")).timestamp())
+
+
+def get_broadcast_start(service: str) -> int | None:
+    """Return the Unix timestamp of when the programme now on air started"""
+    now = time.time()
+    start, end = broadcasts.get(service, (0, 0))
+    if not start <= now < end:
+        try:
+            broadcast = fetch_json(f"{BBC_API}/broadcasts/poll/{service}")["data"][0]
+            start = parse_time(broadcast["start"])
+            end = parse_time(broadcast["end"])
+        except (IndexError, KeyError, OSError, ValueError):
+            return None
+        broadcasts[service] = (start, end)
+    return start if start <= now < end else None
+
+
+def get_now_playing(station: str) -> Track | None:
+    """Return the track now playing on the station, or None if no music is on air"""
+    service = BBC_SERVICES[station]
+    segments = fetch_json(f"{BBC_API}/services/{service}/segments/latest?limit=2")
+    for segment in segments["data"]:
+        offset = segment.get("offset") or {}
+        titles = segment.get("titles") or {}
+        artist, title = titles.get("primary"), titles.get("secondary")
+        if not (offset.get("now_playing") and artist and title):
+            continue
+
+        # Offsets are in seconds from the start of the programme
+        now = int(time.time())
+        length = offset["end"] - offset["start"]
+        broadcast_start = get_broadcast_start(service)
+        start = broadcast_start + offset["start"] if broadcast_start else now
+        if not now - ONE_HOUR_IN_SECONDS < start <= now:
+            # For example, the track straddles two programmes
+            start = now
+        if length <= 0:
+            # Pick something reasonable
+            length = 180
+        return Track(segment["id"], artist, title, start, start + length)
+
+    return None
 
 
 def main() -> None:
@@ -403,7 +446,6 @@ def main() -> None:
             else:
                 if last_station != playing_station:
                     last_station = playing_station
-                    pylast_station = network.get_user(playing_station)
 
                     out = f"Tuned in to {bold(playing_station)}"
                     output(out + "\n" + "-" * len(escape_ansi(out)))
@@ -412,21 +454,14 @@ def main() -> None:
 
                 try:
                     # Get now playing track
-                    new_track = get_now_playing(pylast_station)
-
-                    if (
-                        new_track
-                        and (time.time() - new_track.end) > ONE_HOUR_IN_SECONDS
-                    ):
-                        print("Last track over an hour ago, don't scrobble")
-                        raise Escape
+                    new_track = get_now_playing(playing_station)
 
                     # A new, different track
                     if new_track != playing_track:
                         if scrobble_me_next:
                             scrobble(network, scrobble_me_next)
-                            scrobble_me_next = None
                             last_scrobbled = scrobble_me_next
+                            scrobble_me_next = None
 
                         playing_track = new_track
                         update_now_playing(network, playing_track, args.say)
@@ -443,10 +478,10 @@ def main() -> None:
                         ):
                             scrobble_me_next = playing_track
 
-                except Escape:
-                    pass
                 except (
                     KeyError,
+                    OSError,
+                    ValueError,
                     pylast.NetworkError,
                     pylast.MalformedResponseError,
                     pylast.WSError,
